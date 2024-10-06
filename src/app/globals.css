@@ -3,25 +3,63 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+
+
+  --text: #0b1410;
+  --text-1: #1d352a;
+
+  --background: #f1f8f4;
+  --background-1: #E4F1EA;
+
+  --primary: #65ae88;
+  --primary-1: #94C7AD;
+
+  --secondary: #abcbd3;
+  --secondary-1: #CADEE3;
+
+  --accent: #7da6ba;
+  --accent-1: #A1BFCE;
+
+
+
+
+}
+.dark-mode {
+  --text: #ebf4f0;
+  --text-1: #CAE2D7;
+
+  --background: #070e0a;
+  --background-1: #1B3627;
+
+  --primary: #519a74;
+  --primary-1: #79B998;
+
+  --secondary: #2c4c54;
+  --secondary-1: #467986;
+
+  --accent: #456e82;
+  --accent-1: #5F91AB;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* @layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-}
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
   }
 }
+
+.animate-pulse {
+  animation: pulse 1.5s ease-in-out infinite;
+} */
