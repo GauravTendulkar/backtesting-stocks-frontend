@@ -1,10 +1,18 @@
-
+import { ReactScan } from "@/components/ReactScan";
 
 import localFont from "next/font/local";
 import "./globals.css";
 import NavBar from "@/components/NavBar";
 import EquationContextProvider from "./context/EquationContext";
 import { ThemeProvider } from "next-themes";
+import ValidateAccessTokenContextProvider from "./context/ValidateAccessTokenContext";
+import { Toaster } from "@/components/ui/toaster";
+import CopyIndicatorContexttProvider from "./context/CopyIndicatorContext";
+import StockListContextProvider from "./context/StockListContext";
+import TokenContextProvider from "./context/TokenContext";
+import Footer from "@/components/footer/Footer";
+
+
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -25,24 +33,35 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      
-      
+
       <body>
-      <EquationContextProvider>
-      <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-        
-        <NavBar></NavBar>
-        {children}
-        </ThemeProvider>
-        </EquationContextProvider>
+        <ReactScan />
+        <TokenContextProvider>
+          <CopyIndicatorContexttProvider>
+            {/* <ValidateAccessTokenContextProvider> */}
+            <EquationContextProvider>
+              <StockListContextProvider>
+                <ThemeProvider
+                  attribute="class"
+                  defaultTheme="system"
+                  enableSystem
+                  disableTransitionOnChange
+                >
+
+                  <NavBar></NavBar>
+                  {children}
+                  <Footer />
+                  <Toaster />
+                </ThemeProvider>
+              </StockListContextProvider>
+            </EquationContextProvider>
+            {/* </ValidateAccessTokenContextProvider> */}
+          </CopyIndicatorContexttProvider>
+        </TokenContextProvider>
+
       </body>
-      
-      
+
+
     </html>
   );
 }

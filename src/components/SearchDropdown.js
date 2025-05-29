@@ -1,12 +1,21 @@
 "use client";
-import React, { useState, useRef, useEffect } from 'react';
+
+import React, { forwardRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 // Import FontAwesomeIcon and the search icon
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip"
 
-import { faPlus, faCopy, faPaste, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
 
-const SearchDropdown = (props) => {
+const SearchDropdown = forwardRef(({ className, children, size , ...props }, ref) => {
     const [selectedOption, setSelectedOption] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [isOpen, setIsOpen] = useState(false);
@@ -74,7 +83,7 @@ const SearchDropdown = (props) => {
 
     // Focus on the search input when the dropdown is opened
     useEffect(() => {
-        
+
         if (isOpen && searchInputRef.current) {
             searchInputRef.current.focus();
 
@@ -103,38 +112,38 @@ const SearchDropdown = (props) => {
 
     const updateDocHeight = () => {
         if (popoverRef.current && triggerRef.current) {
-          const refValue = popoverRef.current.getBoundingClientRect();
-          const refValueTrigger = triggerRef.current.getBoundingClientRect();
-          // Check if the dropdown is out of the viewport
-        //   console.log("render")
-        //   console.log( refValueTrigger.bottom)
-        //   console.log(refValue.bottom - refValue.top)
-    
-          const isOut = (document.documentElement.clientHeight - refValueTrigger.bottom) < (refValue.bottom - refValue.top);
-          setIsOutOfViewport(isOut);
+            const refValue = popoverRef.current.getBoundingClientRect();
+            const refValueTrigger = triggerRef.current.getBoundingClientRect();
+            // Check if the dropdown is out of the viewport
+            //   console.log("render")
+            //   console.log( refValueTrigger.bottom)
+            //   console.log(refValue.bottom - refValue.top)
+
+            const isOut = (document.documentElement.clientHeight - refValueTrigger.bottom) < (refValue.bottom - refValue.top);
+            setIsOutOfViewport(isOut);
         }
-      };
+    };
 
 
-      useEffect(() => {
+    useEffect(() => {
         // Set initial value
         updateDocHeight();
-    
+
         window.addEventListener("resize", updateDocHeight);
-    
+
         // Add event listener for scroll (if needed)
         window.addEventListener("scroll", updateDocHeight);
         window.addEventListener("click", updateDocHeight);
-    
-    
-    
+
+
+
         // Cleanup event listeners on component unmount
         return () => {
-          window.removeEventListener("resize", updateDocHeight);
-          window.removeEventListener("click", updateDocHeight);
-          window.removeEventListener("scroll", updateDocHeight);
+            window.removeEventListener("resize", updateDocHeight);
+            window.removeEventListener("click", updateDocHeight);
+            window.removeEventListener("scroll", updateDocHeight);
         };
-      }, []);
+    }, []);
 
 
 
@@ -157,29 +166,48 @@ const SearchDropdown = (props) => {
                 {'Select an Option'}
             </button> */}
 
-            <div className="relative  group my-2 mx-1">
+            {/* <div className="relative  group my-2 mx-1">
                 <button placeholder={"Add"} ref={triggerRef} onClick={toggleDropdown} className="px-4 py-2  items-center justify-center rounded-lg border text-text-color bg-primary-color hover:bg-primary-color-1">
-                    <FontAwesomeIcon icon={faPlus} className="text-center" />
+                <Plus />
                 </button>
 
                 <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     Add
                 </div>
-            </div>
+            </div> */}
+
+
+
+            {/* <Button placeholder={"Add"} ref={triggerRef} onClick={toggleDropdown} className="">
+                {children}
+            </Button> */}
+
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button ref={triggerRef} onClick={toggleDropdown} className="" size={size}>
+                            {children}
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>{props.textForTooltip}</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
 
             {/* Dropdown menu */}
             {isOpen && (
-                <div  ref={popoverRef} className={`absolute z-50 mt-1 bg-background-color-1 rounded-md shadow-lg min-w-max ${isOutOfViewport ? 'bottom-full' : 'top-full'}`}>
+                <div ref={popoverRef} className={`absolute z-50 mt-1 border bg-card text-card-foreground shadow min-w-max ${isOutOfViewport ? 'bottom-full' : 'top-full'}`}>
                     {/* Search bar inside dropdown */}
                     <div className="px-3 py-2 flex items-center">
                         <FontAwesomeIcon icon={faSearch} className="text-gray-500 mr-2" />
-                        <input
+                        <Input
                             type="text"
                             ref={searchInputRef}
                             placeholder="Search..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full py-2 px-3 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:accent"
+                            className=""
                         />
                     </div>
 
@@ -189,7 +217,7 @@ const SearchDropdown = (props) => {
                             <li
                                 key={index}
                                 onClick={() => handleOptionClick(JSON.parse(option.value))}
-                                className="cursor-pointer px-3 py-2 hover:bg-primary-color-1"
+                                className="cursor-pointer px-3 py-2 hover:bg-accent hover:text-accent-foreground"
                             >
                                 {option.label}
                             </li>
@@ -199,6 +227,7 @@ const SearchDropdown = (props) => {
             )}
         </div>
     );
-};
+}
+);
 
 export default SearchDropdown;

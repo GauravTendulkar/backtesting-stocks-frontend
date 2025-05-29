@@ -67,6 +67,8 @@ const ohlc = [
   { "value": "close" }
 ]
 
+
+
 const timeframe = [
   // Minutes
   { "value": 1, "label": "1min" },
@@ -84,13 +86,13 @@ const timeframe = [
   { "value": 240, "label": "4h" },
 
   // Daily
-  { "value": 1440, "label": "Daily" },  // 1 day (24 hours)
+  { "value": "Daily", "label": "Daily" },  // 1 day (24 hours)
 
   // Weekly
-  { "value": 10080, "label": "Weekly" },  // 7 days
+  { "value": "Weekly", "label": "Weekly" },  // 7 days
 
   // Monthly
-  { "value": 43200, "label": "Monthly" },  // 30 days
+  { "value": "Monthly", "label": "Monthly" },  // 30 days
 ];
 
 

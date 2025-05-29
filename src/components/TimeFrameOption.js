@@ -7,23 +7,23 @@ import DialogPopUp from "./DialogPopUp";
 
 export default function TimeFrameOption(props) {
 
-    const [timeFrameOptionUpdate, setTimeFrameOptionUpdate] = useState(props.variablePass)
+    const [timeFrameOptionUpdate, setTimeFrameOptionUpdate] = useState(props.variablePass.slice(0, 2))
     const { previousTimeframes, setPreviousTimeframes, previousTimeframesMinutes, setPreviousTimeframesMinutes, timeframe } = useContext(EquationContext);
     const [nType, setNType] = useState("");
     const [openDialog, setOpenDialog] = useState(false);
 
     useEffect(() => {
-        setTimeFrameOptionUpdate(props.variablePass)
-        
+        setTimeFrameOptionUpdate(props.variablePass.slice(0, 2))
+
     }, [props.variablePass]);
 
     const handleValueChangeFor0 = (e) => {
 
         let temp = [...timeFrameOptionUpdate];
         // for Daily
-        if (timeFrameOptionUpdate[1]["value"] == 1440 || timeFrameOptionUpdate[1]["value"] == 10080 || timeFrameOptionUpdate[1]["value"] == 43200) {
+        if (timeFrameOptionUpdate[1]["value"] == "Daily" || timeFrameOptionUpdate[1]["value"] == "Weekly" || timeFrameOptionUpdate[1]["value"] == "Monthly") {
             if (e == "-n") {
-                
+
                 setNType(e)
                 setOpenDialog(true)
             }
@@ -68,8 +68,8 @@ export default function TimeFrameOption(props) {
 
     const handleValueChangeFor1 = (e) => {
         let temp = [...timeFrameOptionUpdate];
-        
-        if (e == 1440 || e == 10080 || e == 43200) {
+
+        if (e == "Daily" || e == "Weekly" || e == "Monthly") {
             temp[1] = timeframe[timeframe.findIndex((item) => item.value == e)]
             temp[0] = { "value": "0", "label": "current candle" }
         }
@@ -78,18 +78,18 @@ export default function TimeFrameOption(props) {
         }
 
         setTimeFrameOptionUpdate(temp)
-        
+
         props.passto(temp)
     }
 
 
 
     const updateDialog = (valueFromDialog) => {
-        
-       
-        
-        if (nType === '-n' && ((previousTimeframes.findIndex((item) => item.value === `-${valueFromDialog}`)) == -1) && (timeFrameOptionUpdate[1]["value"] == 1440 || timeFrameOptionUpdate[1]["value"] == 10080 || timeFrameOptionUpdate[1]["value"] == 43200)) {
-            
+
+
+
+        if (nType === '-n' && ((previousTimeframes.findIndex((item) => item.value === `-${valueFromDialog}`)) == -1) && (timeFrameOptionUpdate[1]["value"] == "Daily" || timeFrameOptionUpdate[1]["value"] == "Weekly" || timeFrameOptionUpdate[1]["value"] == "Monthly")) {
+
             previousTimeframes.splice(previousTimeframes.findIndex((item) => item.value === "-n"), 0, { "value": `-${valueFromDialog}`, "label": `${valueFromDialog} candles ago` });
 
             let temp = [...timeFrameOptionUpdate]
@@ -99,7 +99,7 @@ export default function TimeFrameOption(props) {
         }
         else if (nType === '-n' && ((previousTimeframesMinutes.findIndex((item) => item.value === `-${valueFromDialog}`)) == -1)) {
             previousTimeframesMinutes.splice(previousTimeframesMinutes.findIndex((item) => item.value === "-n"), 0, { "value": `-${valueFromDialog}`, "label": `${valueFromDialog} candles ago` });
-            
+
             let temp = [...timeFrameOptionUpdate]
             temp[0] = { "value": `-${valueFromDialog}`, "label": `-${valueFromDialog}` }
             setTimeFrameOptionUpdate(temp);
@@ -115,7 +115,7 @@ export default function TimeFrameOption(props) {
         }
         else if (nType === '=n' && ((previousTimeframesMinutes.findIndex((item) => item.value === `=${valueFromDialog}`)) == -1)) {
             previousTimeframesMinutes.splice(previousTimeframesMinutes.findIndex((item) => item.value === "=n"), 0, { "value": `=${valueFromDialog}`, "label": `=${valueFromDialog}` });
-            
+
             let temp = [...timeFrameOptionUpdate]
             temp[0] = { "value": `=${valueFromDialog}`, "label": `=${valueFromDialog}` }
             setTimeFrameOptionUpdate(temp);
@@ -126,14 +126,61 @@ export default function TimeFrameOption(props) {
 
 
         setOpenDialog(false);
-        
+
     }
+
+    // ________________________________________________________________________________
+
+    const valueDefine = () => {
+
+        if (((previousTimeframes.findIndex((item) => item.value === props.variablePass[0]["value"])) == -1) && (props.variablePass[1]["value"] == "Daily" || props.variablePass[1]["value"] == "Weekly" || props.variablePass[1]["value"] == "Monthly")) {
+
+
+            if (props.variablePass[0]["value"].slice(0, 1) === "-") {
+                console.log(props.variablePass[0])
+                console.log(previousTimeframes.findIndex((item) => item.value === "-n"))
+                previousTimeframes.splice(previousTimeframes.findIndex((item) => item.value === "-n"), 0, props.variablePass[0]);
+                setPreviousTimeframes([...previousTimeframes])
+
+
+            }
+        } else if ((previousTimeframesMinutes.findIndex((item) => item.value === props.variablePass[0]["value"])) == -1) {
+
+
+            if (props.variablePass[0]["value"].slice(0, 1) === "-") {
+
+                previousTimeframesMinutes.splice(previousTimeframesMinutes.findIndex((item) => item.value === "-n"), 0, props.variablePass[0]);
+                setPreviousTimeframesMinutes([...previousTimeframesMinutes])
+
+
+            }
+            else if (props.variablePass[0]["value"].slice(0, 2) === "=-") {
+
+                previousTimeframesMinutes.splice(previousTimeframesMinutes.findIndex((item) => item.value === "=-n"), 0, props.variablePass[0]);
+                setPreviousTimeframesMinutes([...previousTimeframesMinutes])
+
+
+            }
+            else if (props.variablePass[0]["value"].slice(0, 1) === "=") {
+
+                previousTimeframesMinutes.splice(previousTimeframesMinutes.findIndex((item) => item.value === "=n"), 0, props.variablePass[0]);
+                setPreviousTimeframesMinutes([...previousTimeframesMinutes])
+            }
+        }
+    }
+
+    useEffect(() => {
+        if(props.isOnClickTrue){
+            valueDefine();
+            props.setIsOnClickTrue(false)
+        }
+    }, [props.isOnClickTrue]);
 
     return (
         <>
             <div className="flex flex-col">
 
-                {(timeFrameOptionUpdate[1]["value"] == 1440 || timeFrameOptionUpdate[1]["value"] == 10080 || timeFrameOptionUpdate[1]["value"] == 43200)
+                {(timeFrameOptionUpdate[1]["value"] == "Daily" || timeFrameOptionUpdate[1]["value"] == "Weekly" || timeFrameOptionUpdate[1]["value"] == "Monthly")
                     ?
                     <select value={timeFrameOptionUpdate[0]["value"]} onChange={(e) => handleValueChangeFor0(e.target.value)} className='border-2 border-black mr-auto  overflow-y-scroll'>
 

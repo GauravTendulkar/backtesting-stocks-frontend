@@ -6,37 +6,46 @@ import { EquationContext } from '@/app/context/EquationContext';
 
 
 import EquationUI from '@/components/logicUI/EquationUI';
+import { Card } from '../ui/card';
 
 
 export default function EntryUI(props){
 
     // const {createEquation, setcreateEquation} = useContext(EquationContext);
-    const [createEquation, setcreateEquation] = useState([{
-      "AND": [{ "condition": [{ "indicator": [{"value": "=-10", "label":"=-10" },
-        { "value": 60, "label": "1h" },
-        {"value": "sma"},
-        {"value":"close"},
-        {"value":20}
-      ] }] },
-      { "AND": [{ "condition": [{ "indicator": [{"value": "=-10", "label":"=-10" },
-        { "value": 60, "label": "1h" },
-        {"value": "sma"},
-        {"value":"close"},
-        {"value":20}
-      ] }] }, { "condition": [{ "indicator": [{"value": "=-10", "label":"=-10" },
-        { "value": 60, "label": "1h" },
-        {"value": "sma"},
-        {"value":"close"},
-        {"value":20}
-      ] }] }] }]
-    }
-    ])
+    // const [createEquation, setcreateEquation] = useState([{
+    //   "AND": [{ "condition": [{ "indicator": [{"value": "=-10", "label":"=-10" },
+    //     { "value": 60, "label": "1h" },
+    //     {"value": "sma"},
+    //     {"value":"close"},
+    //     {"value":20}
+    //   ] }] },
+    //   { "AND": [{ "condition": [{ "indicator": [{"value": "=-10", "label":"=-10" },
+    //     { "value": 60, "label": "1h" },
+    //     {"value": "sma"},
+    //     {"value":"close"},
+    //     {"value":20}
+    //   ] }] }, { "condition": [{ "indicator": [{"value": "=-10", "label":"=-10" },
+    //     { "value": 60, "label": "1h" },
+    //     {"value": "sma"},
+    //     {"value":"close"},
+    //     {"value":20}
+    //   ] }] }] }]
+    // }
+    // ])
 
+    const [createEquation, setcreateEquation] = useState(props.entry)
 
     useEffect(() => {
-        console.log("createEquation")
-        console.log(createEquation)
-      }, [createEquation]);
+      console.log("entry")
+      console.log(props.entry)
+        setcreateEquation(props.entry)
+    }, [props.entry])
+
+    // useEffect(() => {
+    //     console.log("createEquation")
+    //     console.log(createEquation)
+    //     // props.getEntry(createEquation)
+    //   }, [createEquation]);
 
     const passToMain = (arr, id, objName)=>{
       
@@ -71,7 +80,7 @@ export default function EntryUI(props){
     return(
         <>
         
-        <div className=' mx-auto'>
+        <Card className=' mx-2 '>
     
           {createEquation.map((e, id)=>{
             
@@ -86,7 +95,7 @@ export default function EntryUI(props){
             
     
           })}
-        </div>
+        </Card>
         
         
     

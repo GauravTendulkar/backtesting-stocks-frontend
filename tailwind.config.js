@@ -9,6 +9,17 @@ module.exports = {
 	theme: {
 		extend: {
 			colors: {
+
+				gray: {
+					400: '#848e9c',
+					600: '#2d3344',
+					700: '#252a37',
+					800: '#1e2230',
+				},
+				blue: {
+					500: '#2962ff',
+					600: '#1e4dff',
+				},
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
 				card: {
@@ -48,22 +59,34 @@ module.exports = {
 					'3': 'hsl(var(--chart-3))',
 					'4': 'hsl(var(--chart-4))',
 					'5': 'hsl(var(--chart-5))'
-				},
-				'text-color': 'var(--text)',
-				'text-color-1': 'var(--text-1)',
-				'background-color': 'var(--background)',
-				'background-color-1': 'var(--background-1)',
-				'primary-color': 'var(--primary)',
-				'primary-color-1': 'var(--primary-1)',
-				'secondary-color': 'var(--secondary)',
-				'secondary-color-1': 'var(--secondary-1)',
-				'accent-color': 'var(--accent)',
-				'accent-color-1': 'var(--accent-1)',
+				}
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
 				sm: 'calc(var(--radius) - 4px)'
+			},
+			keyframes: {
+				'accordion-down': {
+					from: {
+						height: '0'
+					},
+					to: {
+						height: 'var(--radix-accordion-content-height)'
+					}
+				},
+				'accordion-up': {
+					from: {
+						height: 'var(--radix-accordion-content-height)'
+					},
+					to: {
+						height: '0'
+					}
+				}
+			},
+			animation: {
+				'accordion-down': 'accordion-down 0.2s ease-out',
+				'accordion-up': 'accordion-up 0.2s ease-out'
 			}
 		}
 	},

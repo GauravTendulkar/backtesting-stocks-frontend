@@ -4,6 +4,10 @@ import React from 'react'
 import { useState, useEffect } from 'react'
 
 import ConditionUI from './ConditionUI';
+import { Button } from '../ui/button';
+import { Separator } from "@/components/ui/separator"
+import { Card } from '../ui/card';
+import { X } from 'lucide-react';
 
 function EquationUI(props) {
 
@@ -162,7 +166,7 @@ function EquationUI(props) {
         setUpdateEquation([...temp])
         // console.log('props.level')
         // console.log(props.level)
-        
+
         if (props.level == 0) {
             // console.log('hello')
             props.passToMain([...temp], props.index, props.objName[0])
@@ -177,17 +181,18 @@ function EquationUI(props) {
     return (
         <>
             {/* group structure */}
-            <div className=' border-4 border-blue-700 bg-slate-200 m-2'>
-                <div className='flex border-2 border-black justify-end'>
+            <div className=' m-2'>
+                <div className='flex  justify-end space-x-2'>
                     <span className='mr-auto'>
-                        <button className={(updateAndOr == 'AND') ? 'px-2 border-2 border-black bg-black text-white' : 'px-2 border-2 border-black'} onClick={() => { toggleAndOr('AND') }}>AND</button>
-                        <button className={(updateAndOr == 'OR') ? 'px-2 border-2 border-black bg-black text-white' : 'px-2 border-2 border-black'} onClick={() => { toggleAndOr('OR') }}>OR</button>
+
+                        <Button variant={(updateAndOr == 'AND') ? '' : 'secondary'} onClick={() => { toggleAndOr('AND') }}>AND</Button>
+                        <Button variant={(updateAndOr == 'OR') ? '' : 'secondary'} onClick={() => { toggleAndOr('OR') }}>OR</Button>
 
                     </span>
 
-                    <button className='px-2 border-2 border-black' onClick={addCondition}>Condition</button>
-                    <button className='px-2 border-2 border-black' onClick={addGroup}>Group</button>
-                    <button className='px-2 border-2 border-black' onClick={()=>{if (props.level == 1){props.removeGroup(props.index)}}}>X</button>
+                    <Button variant='' onClick={addCondition}>Condition</Button>
+                    <Button variant='secondary' onClick={addGroup}>Group</Button>
+                    <Button variant='destructive' onClick={() => { if (props.level == 1) { props.removeGroup(props.index) } }}><X  /></Button>
                     {/* {console.log(props.objectPass)} */}
                 </div>
 
@@ -196,13 +201,27 @@ function EquationUI(props) {
                     {updateEquation.map((e, id) => {
 
                         if (Object.keys(props.objectPass[id])[0] === "condition") {
-                            return <ConditionUI key={id} index={id} passToEquation={passToEquation} objName={Object.keys(props.objectPass[id])} objectPass={e["condition"]} removeCondition={removeCondition} ></ConditionUI>
+                            return <div key={id}>
+                                <Separator />
+                                {/* {console.log("Object.keys(props.objectPass[id])")}
+                                {console.log(updateEquation)}
+                                {console.log(e)}
+                                {console.log(props.objectPass[id])} */}
+
+                                <ConditionUI  index={id} passToEquation={passToEquation} objName={Object.keys(props.objectPass[id])} objectPass={e["condition"]} removeCondition={removeCondition} ></ConditionUI>
+
+
+                            </div>
                         }
                         else if (Object.keys(props.objectPass[id])[0] === "AND") {
-                            return <EquationUI key={id} index={id} level={1} passToEquation={passToEquation} objName={Object.keys(props.objectPass[id])} changeKeyOfEquation={changeKeyOfEquation} objectPass={e["AND"]} removeGroup={removeGroup}></EquationUI>
+                            return <Card key={id}>
+                                <EquationUI  index={id} level={1} passToEquation={passToEquation} objName={Object.keys(props.objectPass[id])} changeKeyOfEquation={changeKeyOfEquation} objectPass={e["AND"]} removeGroup={removeGroup}></EquationUI>
+                            </Card>
                         }
                         else if (Object.keys(props.objectPass[id])[0] === "OR") {
-                            return <EquationUI key={id} index={id} level={1} passToEquation={passToEquation} objName={Object.keys(props.objectPass[id])} changeKeyOfEquation={changeKeyOfEquation} objectPass={e["OR"]} removeGroup={removeGroup}></EquationUI>
+                            return <Card key={id}>
+                                <EquationUI  index={id} level={1} passToEquation={passToEquation} objName={Object.keys(props.objectPass[id])} changeKeyOfEquation={changeKeyOfEquation} objectPass={e["OR"]} removeGroup={removeGroup}></EquationUI>
+                            </Card>
                         }
 
 
@@ -214,7 +233,7 @@ function EquationUI(props) {
                 </div>
 
 
-            </div>
+            </div >
         </>
     )
 }

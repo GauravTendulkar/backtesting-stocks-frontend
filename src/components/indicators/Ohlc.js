@@ -19,44 +19,9 @@ export default function Ohlc(props) {
         setOhlcUpdate(props.arrayPass)
     }, [props.arrayPass]);
 
-
-    const valueDefine = () => {
-
-        if (((previousTimeframes.findIndex((item) => item.value === ohlcUpdate[0]["value"])) == -1) && (ohlcUpdate[1]["value"] == 1440 || ohlcUpdate[1]["value"] == 10080 || ohlcUpdate[1]["value"] == 43200)) {
+    const [isOnClickTrue, setIsOnClickTrue] = useState(false)
 
 
-            if (ohlcUpdate[0]["value"].slice(0, 1) === "-") {
-                console.log(ohlcUpdate[0])
-                console.log(previousTimeframes.findIndex((item) => item.value === "-n"))
-                previousTimeframes.splice(previousTimeframes.findIndex((item) => item.value === "-n"), 0, ohlcUpdate[0]);
-                setPreviousTimeframes([...previousTimeframes])
-
-
-            }
-        } else if ((previousTimeframesMinutes.findIndex((item) => item.value === ohlcUpdate[0]["value"])) == -1) {
-
-
-            if (ohlcUpdate[0]["value"].slice(0, 1) === "-") {
-
-                previousTimeframesMinutes.splice(previousTimeframesMinutes.findIndex((item) => item.value === "-n"), 0, ohlcUpdate[0]);
-                setPreviousTimeframesMinutes([...previousTimeframesMinutes])
-
-
-            }
-            else if (ohlcUpdate[0]["value"].slice(0, 2) === "=-") {
-
-                previousTimeframesMinutes.splice(previousTimeframesMinutes.findIndex((item) => item.value === "=-n"), 0, ohlcUpdate[0]);
-                setPreviousTimeframesMinutes([...previousTimeframesMinutes])
-
-
-            }
-            else if (ohlcUpdate[0]["value"].slice(0, 1) === "=") {
-
-                previousTimeframesMinutes.splice(previousTimeframesMinutes.findIndex((item) => item.value === "=n"), 0, ohlcUpdate[0]);
-                setPreviousTimeframesMinutes([...previousTimeframesMinutes])
-            }
-        }
-    }
 
     const passtoOhlc = (v) => {
 
@@ -70,21 +35,28 @@ export default function Ohlc(props) {
     }
 
     // useContext ________________________________________________________________________________________
-    const { previousTimeframes, setPreviousTimeframes, previousTimeframesMinutes, setPreviousTimeframesMinutes, ohlc } = useContext(EquationContext);
+    // const { previousTimeframes, setPreviousTimeframes, previousTimeframesMinutes, setPreviousTimeframesMinutes, ohlc } = useContext(EquationContext);
 
     return (
         <>
             <Popover>
                 <PopoverTrigger asChild>
-                    <Button  onClick={valueDefine} variant="outline"><div>{`[${ohlcUpdate[0]["value"]}]${ohlcUpdate[1]["label"]} `}<span className={"font-bold"}>{`${ohlcUpdate[2]["label"]}`}</span></div> </Button>
+                    <Button onClick={() => {
+                        setIsOnClickTrue(true)
+                    }} variant="outline"><div>{`[${ohlcUpdate[0]["value"]}]${ohlcUpdate[1]["label"]} `}<span className={"font-bold"}>{`${ohlcUpdate[2]["label"]}`}</span></div> </Button>
                 </PopoverTrigger>
                 <PopoverContent>
                     <div>
-                        <TimeFrameOption variablePass={ohlcUpdate.slice(0, 2)} passto={passtoOhlc}></TimeFrameOption>
+                        <TimeFrameOption
+                            isOnClickTrue={isOnClickTrue}
+                            setIsOnClickTrue={setIsOnClickTrue}
+
+                            variablePass={ohlcUpdate}
+                            passto={passtoOhlc}></TimeFrameOption>
 
 
 
-                        
+
                     </div>
                 </PopoverContent>
             </Popover>

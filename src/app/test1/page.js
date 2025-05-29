@@ -1,3 +1,5 @@
+"use client"
+
 import React, { useEffect, useState } from 'react';
 import {
   Dialog,
@@ -16,10 +18,10 @@ export default function Test1() {
   const [error, setError] = useState('');
 
 
-  useEffect(()=>{
+  useEffect(() => {
     console.log(inputValue)
-  },[inputValue]);
-  
+  }, [inputValue]);
+
   const handleInputChange = (e) => {
     const value = e.target.value;
 

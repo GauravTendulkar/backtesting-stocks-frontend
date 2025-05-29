@@ -23,40 +23,44 @@ import {
 
 export function ComboboxDemo(props) {
 
-    const frameworks = props.frameworks
-    // [
-    //     {
-    //       value: JSON.stringify([-1, 15, "sma", "close", 9]),
-    //       label: "Simple Moving Average",
-    //     },
-    //     {
-    //       value: JSON.stringify(["<"]),
-    //       label: "<",
-    //     },
-    //     {
-    //       value: JSON.stringify([">"]),
-    //       label: ">",
-    //     },
-    //     {
-    //       value: JSON.stringify(["<="]),
-    //       label: "<=",
-    //     },
-    //     {
-    //       value: JSON.stringify([">="]),
-    //       label: ">=",
-    //     },
-    //   ]
+  const frameworks = props.frameworks
+  // [
+  //     {
+  //       value: JSON.stringify([-1, 15, "sma", "close", 9]),
+  //       label: "Simple Moving Average",
+  //     },
+  //     {
+  //       value: JSON.stringify(["<"]),
+  //       label: "<",
+  //     },
+  //     {
+  //       value: JSON.stringify([">"]),
+  //       label: ">",
+  //     },
+  //     {
+  //       value: JSON.stringify(["<="]),
+  //       label: "<=",
+  //     },
+  //     {
+  //       value: JSON.stringify([">="]),
+  //       label: ">=",
+  //     },
+  //   ]
   const [open, setOpen] = React.useState(false)
-  const [value, setValue] = React.useState("")
+  const [value, setValue] = React.useState("Bearish Scan")
 
-  React.useEffect(()=>{
+
+  // React.useEffect(()=>{
+  //   setValue("")
+  // },[props.value])
+  React.useEffect(() => {
     // console.log(value)
     if (value != "") {
-        props.onChange(value)
-        setValue("")
+      props.onChange(value)
+      setValue("")
     }
-    
-  },[value]);
+
+  }, [value]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

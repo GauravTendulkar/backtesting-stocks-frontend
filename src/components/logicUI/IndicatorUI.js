@@ -5,6 +5,9 @@ import { useState } from 'react';
 import Sma from '../indicators/Sma';
 import Ohlc from '../indicators/Ohlc';
 import LogicalOperators from '../indicators/LogicalOperators';
+import { ClipboardCopy, X } from 'lucide-react';
+import Macd from '../indicators/Macd';
+import Number from '../indicators/Number';
 
 function IndicatorUI(props) {
     const [updateIndicator, setUpdateIndicator] = useState(props.objectPass);
@@ -54,8 +57,19 @@ function IndicatorUI(props) {
                 <Sma arrayPass={updateIndicator} passto={passToIndicator} />
             );
         }
+        else if (updateIndicator[2] && (updateIndicator[2]["value"] === "macd_line" || updateIndicator[2]["value"] === "signal_line" || updateIndicator[2]["value"] === "macd_histogram")) {
+            return (
+                <Macd arrayPass={updateIndicator} passto={passToIndicator} />
+            );
+        }
 
-        else if (updateIndicator[0] && (updateIndicator[0]["value"] === "<" || updateIndicator[0]["value"] === ">")) {
+        else if (updateIndicator[0] && (updateIndicator[0]["value"] === "<"
+            || updateIndicator[0]["value"] === ">"
+            || updateIndicator[0]["value"] === "<="
+            || updateIndicator[0]["value"] === ">="
+            || updateIndicator[0]["value"] === "=="
+            || updateIndicator[0]["value"] === "!="
+        )) {
             return <LogicalOperators arrayPass={updateIndicator} />;
         }
         else if (updateIndicator[2] && (updateIndicator[2]["value"] === "high"
@@ -65,29 +79,40 @@ function IndicatorUI(props) {
         )) {
             return (
                 <Ohlc arrayPass={updateIndicator} passto={passToIndicator} />
-            );
+            )
+
+        }
+        else if (updateIndicator[0] && (updateIndicator[0]["value"] === "number")) {
+            return (
+                <Number arrayPass={updateIndicator} passto={passToIndicator}/>
+            )
+
         }
         else {
             return <div>Hello</div>;
-        }
+        } 
     }
     return (
         <>
-
-            <div className='border-2 border-black m-2 flex flex-shrink-0 flex-grow-0 justify-center content-center rounded-md'
+ 
+            <div className='relative  flex flex-shrink-0 flex-grow-0 justify-center content-center rounded-md'
                 onMouseEnter={() => handleMouseEnter()}
                 onMouseLeave={() => handleMouseLeave()}>
-                <button className={`border-2 border-black rounded-lg px-2 ${display}`} onClick={() => props.handleCopyIndicator(props.index)}>+</button>
+                {/* <button className={`border-2 border-black rounded-lg px-2 ${display}`} onClick={() => props.handleCopyIndicator(props.index)}>+</button> */}
 
+                <button className={`rounded-full  absolute -top-2.5 -left-2 ${display}`} variant="outline" onClick={() => props.handleCopyIndicator(props.index)}><ClipboardCopy /></button>
+
+
+                <button className={`rounded-full  absolute -top-2.5 -right-0 ${display}`} variant="outline" onClick={() => props.removeIndicator(props.index)}> <X /></button>
 
                 {renderComponent()}
 
 
 
-                <button className={`border-2 border-black rounded-r-full px-2 ${display}`}
+                {/* <button className={`border-2 border-black rounded-r-full px-2 ${display}`}
                     onClick={() => props.removeIndicator(props.index)}
 
-                >x</button>
+                >x</button> */}
             </div>
 
 
