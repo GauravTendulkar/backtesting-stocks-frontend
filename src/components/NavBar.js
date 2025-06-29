@@ -1,40 +1,31 @@
 import NavBarClient from "./NavbarClient";
-import { cookies } from 'next/headers'
-import axios from 'axios'
-import { backendUrl } from "@/json-data/backendServer";
+
+import { backendUrl, serverSideBackendUrl } from "@/json-data/backendServer";
+import { auth } from "@/auth";
+import axios from "axios";
 
 const NavBar = async () => {
 
-    const cookieStore = cookies()
-    const token = cookieStore.get('jwt_token')?.value
-    let response
-    let isTokenValid
-    if (!token) {
-        isTokenValid = false
-    }
 
-    // console.log("token", token)
 
+    const session = await auth();
+    let roles = []
     try {
-        response = await axios.get(`${backendUrl}oauth/users/me`, {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-            }
-        })
-        // console.log(response)
-        isTokenValid = true
-        // console.log("isTokenValid", isTokenValid)
-    } catch (error) {
-        isTokenValid = false
-        // console.log("isTokenValid", isTokenValid, error)
-    }
+        roles = await axios.post(`${serverSideBackendUrl}api/admin-dashboard/get-roles`, {
+            user_email: session?.user?.email
+        });
 
+
+    }
+    catch (error) {
+        console.error(error)
+    }
 
     return (
         <>
             <nav>
 
-                <NavBarClient isTokenValid={isTokenValid}></NavBarClient>
+                <NavBarClient session={session} roles={roles?.data || []}></NavBarClient>
             </nav>
         </>
     );

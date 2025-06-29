@@ -87,11 +87,42 @@ const DialogForSaveAs = ({ open = false, setOpen = () => { }, valueProp = {}, on
             "value": "intraday_short",
             "label": "Intraday Bearish Scan"
         },
+        // {
+        //     "value": "Other",
+        //     "label": "Other"
+        // },
+    ]
+
+    const tags = [
+        {
+            "value": "long",
+            "label": "Bullish Scan"
+        },
+        {
+            "value": "short",
+            "label": "Bearish Scan"
+        },
+        {
+            "value": "intraday_long",
+            "label": "Intraday Bullish Scan"
+        },
+        {
+            "value": "intraday_short",
+            "label": "Intraday Bearish Scan"
+        },
         {
             "value": "Other",
             "label": "Other"
         },
     ]
+
+
+    const handleTagsChange = (data) => {
+
+        let temp = { ...currentComponentState }
+        temp["tags"] = data
+        setCurrentComponentState({ ...temp })
+    }
 
     return (
         <>
@@ -128,6 +159,22 @@ const DialogForSaveAs = ({ open = false, setOpen = () => { }, valueProp = {}, on
                                 Select a category
                             </option>
                             {scanCategory.map((e, id) => {
+                                return (
+                                    <option key={id} value={e.value}>{e.label}</option>
+                                );
+                            })}
+                        </select>
+                        <Label>Tags</Label>
+                        <select
+
+                            value={currentComponentState.tags}
+                            onChange={(e) => handleTagsChange(e.target.value)}
+                            className='border-2 border-black mr-auto  overflow-y-scroll'>
+
+                            <option value="" disabled>
+                                Select a Tag
+                            </option>
+                            {tags.map((e, id) => {
                                 return (
                                     <option key={id} value={e.value}>{e.label}</option>
                                 );

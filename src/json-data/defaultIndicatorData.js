@@ -205,7 +205,7 @@ const indicatorData = [
     { "value": "close" },
     { "value": 2 }
     ],
-    label: "Basis (BB)",
+    label: "Upper (BB)",
     "search": ["BB", "Bollinger Bands", "Upper BB", "Upper Bollinger Bands"]
   },
   {

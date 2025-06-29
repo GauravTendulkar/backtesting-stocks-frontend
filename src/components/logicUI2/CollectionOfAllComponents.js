@@ -12,71 +12,70 @@ import DialogForSave from '../DialogForSave';
 import ButtonEnableAfterInterval from '../buttons/ButtonEnableAfterInterval';
 import { backendUrl } from '@/json-data/backendServer';
 import StockListSelection from '../stockList/StockListSelection';
-import { TokenContext } from '@/app/context/TokenContext';
+import { usePathname } from 'next/navigation';
 import dynamic from 'next/dynamic';
 
 import EntryPrice from '@/components/logicUI2/EntryPrice';
 import Quantity from '@/components/logicUI2/Quantity';
 import ExitUI from '@/components/logicUI2/ExitUI';
-// import { ToastAction } from '../ui/toast';
+import { ToastAction } from '../ui/toast';
 import { DateRangePickerTradingView } from '../DateRangePickerTradingView';
 // import TimeCounter from '../TimeCounter';
-// import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import TradeTable from '../tables/TradeTable ';
+import { StockListContext } from '@/app/context/StockListContext';
+import LikeDislikeButton from '../likeDislike/LikeDislikeButton';
 // import PNLLineChart from '../pnlCharts/PNLLineChart';
 
 // const EntryPrice = dynamic(() => import('@/components/logicUI2/EntryPrice'));
 // const Quantity = dynamic(() => import('@/components/logicUI2/Quantity'));
 // const ExitUI = dynamic(() => import('@/components/logicUI2/ExitUI'));
-const ToastAction = dynamic(() => import('../ui/toast'));
+// const ToastAction = dynamic(() => import('../ui/toast'));
 // const DateRangePickerTradingView = dynamic(() => import('../DateRangePickerTradingView'));
 const TimeCounter = dynamic(() => import('../TimeCounter'));
-const useToast = dynamic(() => import('@/hooks/use-toast'));
+// const useToast = dynamic(() => import('@/hooks/use-toast'));
 // const TradeTable = dynamic(() => import('../tables/TradeTable'));
 const PNLLineChart = dynamic(() => import('../pnlCharts/PNLLineChart'));
 
 
 const StockListSelection1 = React.memo(StockListSelection)
 
-const CollectionOfAllComponents = memo(({ valueProp = {} }) => {
-    // console.log("CollectionOfAllComponents")
-    // const cookieStore = cookies();
-    // const tokenCookie = cookieStore.get('jwt_token');
+const CollectionOfAllComponents = memo(({ valueProp = {}, session = null, data }) => {
 
-    // const token = tokenCookie?.value;
-
-    // const token = Cookies.get('jwt_token');
-    const { token } = useContext(TokenContext);
+    const pathname = usePathname();
+    console.log("pathname", pathname)
     const router = useRouter();
-    // if (!token) {
-    //     // Handle case where no token is present
-    //     // return <div>Please log in</div>;
-    //     // redirect(`/signin`)
-    //     router.push(`/signin`)
-    // }
+
 
     const [currentComponentState, setCurrentComponentState] = useState(valueProp);
 
-    // router.refresh()
+    const { stockData, setStockData, saveStockData, getStockData, setSessionStockList } = useContext(StockListContext);
+
     useEffect(() => {
-        // setCurrentComponentState(valueProp)
+        setStockData(data)
+    }, [data])
+
+    useEffect(() => {
+        setSessionStockList(session)
+    }, [session])
+    useEffect(() => {
+
 
         if (JSON.stringify(valueProp) !== JSON.stringify(currentComponentState)) {
             setCurrentComponentState(valueProp)
         }
     }, [valueProp]);
 
-    // useEffect(() => {
-    //     router.refresh()
-    // }, [])
 
     const [runButton, setRunButton] = useState(true);
     const [isDialogOpenSaveAs, setIsDialogOpenSaveAs] = useState(false)
     const [isDialogOpenSave, setIsDialogOpenSave] = useState(false)
 
     const [stockListDisplay, setStockListDisplay] = useState([])
-    const [stockListName, setStockListName] = useState(currentComponentState.stockListName)
+    const [stockListName, setStockListName] = useState(valueProp.stockListName)        //valueProp.stockListName
     const [command, setCommand] = useState("reset");
+
+    const { toast } = useToast()
     useEffect(() => {
         console.log("Create2", currentComponentState)
     }, [currentComponentState])
@@ -91,6 +90,10 @@ const CollectionOfAllComponents = memo(({ valueProp = {} }) => {
 
     }
 
+
+    useEffect(() => {
+        console.log("stockListName C2", stockListName)
+    }, [stockListName])
 
     const removeIfSwitchIsFalse = () => {
 
@@ -263,7 +266,13 @@ const CollectionOfAllComponents = memo(({ valueProp = {} }) => {
         try {
             setErrorDateRange(null);
             setPnlResult([]);
-            const response = await axios.post(`${backendUrl}api/run-backtesting`, getPostData);
+            const response = await axios.post(`${backendUrl}api/run-backtesting`, {
+                ...getPostData,
+                user_email: session?.user?.email || null,
+                // user_email: undefined || null,
+                contentId: currentComponentState["_id"],
+                link: currentComponentState["link"],
+            });
             let r = response.data.data_result
             console.log('Success:', JSON.parse(r));
             setPnlResult(JSON.parse(r))
@@ -295,15 +304,13 @@ const CollectionOfAllComponents = memo(({ valueProp = {} }) => {
         data["equation"] = JSON.stringify(data["equation"])
 
         try {
-
+            console.log("handleSaveAs", session?.user?.email)
             const response = await axios.post(
-                `${backendUrl}equations/`,
-                data,
+                `${backendUrl}equations/save-as/`,
+
                 {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
+                    ...data,
+                    user_email: session?.user?.email || null
                 }
             );
 
@@ -313,7 +320,7 @@ const CollectionOfAllComponents = memo(({ valueProp = {} }) => {
             }
 
         } catch (error) {
-            console.error('Error submitting data:', error.response.data.detail);
+            // console.error('Error submitting data:', error.response.data.detail);
             if (error.response.status == 400) {
                 return (
 
@@ -331,8 +338,7 @@ const CollectionOfAllComponents = memo(({ valueProp = {} }) => {
                 )
             }
             if (error.response.status == 401) {
-                // router.push(`/signin`)
-                // router.refresh()
+
 
                 return (
 
@@ -341,7 +347,7 @@ const CollectionOfAllComponents = memo(({ valueProp = {} }) => {
                         description: "Please signin to be able to Save new Scan ",
                         action: (
                             <ToastAction altText="Goto schedule to undo" onClick={() => {
-                                router.push(`/signin`)
+                                router.push(`/sign-in`)
                                 router.refresh()
                             }} >Sign In</ToastAction>
 
@@ -354,22 +360,20 @@ const CollectionOfAllComponents = memo(({ valueProp = {} }) => {
 
     }
 
-    const { toast } = useToast()
+
 
     const handleSave = async (data) => {
-
+        // console.log("_id in data", data)
         if ("_id" in data) {
 
             try {
                 setCurrentComponentState({ ...data })
                 data["equation"] = JSON.stringify(data["equation"])
-                const response = await axios.put(`${backendUrl}equations/${data["_id"]}`, data, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
+                const response = await axios.put(`${backendUrl}equations/${data["_id"]}`, {
+                    ...data,
+                    user_email: session?.user?.email || null
                 });
-                // console.log('Response:', response);
+                // console.log('Response:', response.status);
 
                 if (response?.status === 200) {
                     return (
@@ -390,10 +394,24 @@ const CollectionOfAllComponents = memo(({ valueProp = {} }) => {
                 }
 
             } catch (error) {
-                console.error('Error submitting data:');
+                // console.error('Error submitting data:', error);
 
                 if (error?.response?.status == 401) {
-                    router.push(`/signin`)
+                    return (
+
+                        toast({
+                            title: "Sign In",
+                            description: "Please signin to be able to save",
+                            action: (
+                                <ToastAction altText="Goto schedule to undo" onClick={() => {
+                                    router.push(`/sign-in`)
+                                    router.refresh()
+                                }} >Sign In</ToastAction>
+
+                            ),
+                        })
+
+                    )
                     router.refresh()
                 }
             }
@@ -406,7 +424,7 @@ const CollectionOfAllComponents = memo(({ valueProp = {} }) => {
                     description: "Please signin to be able to save",
                     action: (
                         <ToastAction altText="Goto schedule to undo" onClick={() => {
-                            router.push(`/signin`)
+                            router.push(`/sign-in`)
                             router.refresh()
                         }} >Sign In</ToastAction>
 
@@ -421,7 +439,7 @@ const CollectionOfAllComponents = memo(({ valueProp = {} }) => {
 
     const handleChangeList = useCallback((data) => {
         setStockListDisplay(data.list || []);
-        setStockListName(data.name)
+        // setStockListName(data.name)
         setCurrentComponentState({ ...currentComponentState, stockListName: data.name })
         // console.log("data ******************", data)
     }, [setStockListDisplay]);
@@ -445,8 +463,9 @@ const CollectionOfAllComponents = memo(({ valueProp = {} }) => {
                 >
                     {isVisible ? "Hide Stock List" : "Show Stock List"}
                 </Button>
-                <ButtonEnableAfterInterval noOfIntervals={10} onClick={() => handleSave(currentComponentState)}>Quick Save</ButtonEnableAfterInterval>
-                <StockListSelection1 valueList={stockListName} onChangeList={handleChangeList} />
+                {pathname != "/create-2" ? <ButtonEnableAfterInterval noOfIntervals={10} onClick={() => handleSave(currentComponentState)}>Quick Save</ButtonEnableAfterInterval> : null}
+                <StockListSelection1 valueList={stockListName} onChangeList={handleChangeList} session={session} />
+                {/* <StockListSelection1 valueList={"default"} onChangeList={handleChangeList} /> */}
 
             </div>
             {isVisible && (
@@ -478,14 +497,14 @@ const CollectionOfAllComponents = memo(({ valueProp = {} }) => {
 
             <div className={"flex flex-row ml-3 items-center  space-x-3  "}>
 
-                {runButton ? <Button onClick={postData} className={``}>Run</Button>
+                {runButton ? <Button onClick={() => postData()} className={``}>Run</Button>
                     : <Button disabled>
                         <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
                         Please wait
                     </Button>
                 }
 
-                <Button onClick={() => { setIsDialogOpenSave(true) }} className={``} variant="secondary">Save</Button>
+                {pathname != "/create-2" ? <Button onClick={() => { setIsDialogOpenSave(true) }} className={``} variant="secondary">Save</Button> : null}
                 <Button onClick={() => { setIsDialogOpenSaveAs(true) }} className={``} variant="secondary">Save As</Button>
                 <div>
 
@@ -517,6 +536,11 @@ const CollectionOfAllComponents = memo(({ valueProp = {} }) => {
                     command={command}
                     timer={(data) => { }}
                 />
+
+                <LikeDislikeButton
+                    contentId={currentComponentState["_id"]}
+                    initialLikes={currentComponentState["likes"]}
+                    initialDislikes={currentComponentState["dislikes"]}></LikeDislikeButton>
             </div>
             {errorDateRange && <div ref={dateRangeErrorRef} className='p-1 text-red-500' >{errorDateRange}</div>}
             {/*  && */}

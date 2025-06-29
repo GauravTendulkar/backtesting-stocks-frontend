@@ -1,4 +1,4 @@
-import { ReactScan } from "@/components/ReactScan";
+// import { ReactScan } from "@/components/ReactScan";
 
 import localFont from "next/font/local";
 import "./globals.css";
@@ -11,7 +11,9 @@ import CopyIndicatorContexttProvider from "./context/CopyIndicatorContext";
 import StockListContextProvider from "./context/StockListContext";
 import TokenContextProvider from "./context/TokenContext";
 import Footer from "@/components/footer/Footer";
-
+import QueryProviders from "./context/QueryProvider";
+import { SessionProvider } from "next-auth/react";
+// import { Toaster } from "react-hot-toast";
 
 
 const geistSans = localFont({
@@ -35,33 +37,38 @@ export default function RootLayout({ children }) {
     <html lang="en">
 
       <body>
-        <ReactScan />
-        <TokenContextProvider>
+        {/* <ReactScan /> */}
+        
+        <QueryProviders>
+          {/* <TokenContextProvider> */}
+
           <CopyIndicatorContexttProvider>
             {/* <ValidateAccessTokenContextProvider> */}
             <EquationContextProvider>
               <StockListContextProvider>
-                <ThemeProvider
-                  attribute="class"
-                  defaultTheme="system"
-                  enableSystem
-                  disableTransitionOnChange
-                >
-
-                  <NavBar></NavBar>
-                  {children}
-                  <Footer />
-                  <Toaster />
-                </ThemeProvider>
+                <SessionProvider>
+                  <ThemeProvider
+                    attribute="class"
+                    defaultTheme="system"
+                    enableSystem
+                    disableTransitionOnChange
+                  >
+                    <NavBar></NavBar>
+                    {children}
+                    <Footer />
+                    <Toaster />
+                  </ThemeProvider>
+                </SessionProvider>
               </StockListContextProvider>
             </EquationContextProvider>
             {/* </ValidateAccessTokenContextProvider> */}
           </CopyIndicatorContexttProvider>
-        </TokenContextProvider>
 
+          {/* </TokenContextProvider> */}
+        </QueryProviders>
       </body>
 
 
-    </html>
+    </html >
   );
 }

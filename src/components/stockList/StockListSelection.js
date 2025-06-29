@@ -3,8 +3,8 @@
 import { StockListContext } from "@/app/context/StockListContext";
 import React, { memo, useContext, useEffect, useState } from "react";
 
-const StockListSelection = memo(({ valueList = "default", onChangeList }) => {
-    const { stockData } = useContext(StockListContext);
+const StockListSelection = memo(({ valueList = "default", onChangeList, session = null }) => {
+    const { stockData, setSessionStockList } = useContext(StockListContext);
 
     // Array of objects where each object has { name, list }
     const [stockLists, setStockLists] = useState([]);
@@ -12,8 +12,12 @@ const StockListSelection = memo(({ valueList = "default", onChangeList }) => {
     const [selectedList, setSelectedList] = useState([]);
 
     useEffect(() => {
-        // console.log("selectedListName", selectedListName)
+        console.log("selectedListName", selectedListName)
     }, [selectedListName])
+
+    useEffect(() => {
+        setSessionStockList(session)
+    }, [session])
 
     // Build combined stock lists from context data
     useEffect(() => {

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import React, { useContext, useState } from "react"
 import axios from "axios"
 import { useRouter } from 'next/navigation';
-import Cookies from 'js-cookie';
+
 import { backendUrl } from "@/json-data/backendServer"
 import { StockListContext } from "@/app/context/StockListContext"
 import { TokenContext } from "@/app/context/TokenContext"
@@ -24,7 +24,7 @@ const SignIn = () => {
     const [errors, setErrors] = useState({})
     const router = useRouter();
 
-    const { changeToken } = useContext(TokenContext)
+    // const { changeToken } = useContext(TokenContext)
 
     const { getStockData } = useContext(StockListContext);
 
@@ -79,7 +79,7 @@ const SignIn = () => {
 
             // Store JWT token in cookie
             const token = response.data.access_token
-            changeToken(token)
+            // changeToken(token)
             // Cookies.set('jwt_token', token, {
             //     expires: 7, // Expires in 7 days
             //     secure: process.env.NODE_ENV === 'production', // Use secure in production

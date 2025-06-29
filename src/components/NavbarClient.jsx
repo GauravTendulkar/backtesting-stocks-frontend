@@ -6,41 +6,59 @@ import { MoonIcon, SunIcon } from "@radix-ui/react-icons"
 import { useTheme } from "next-themes"
 import { useState, useContext, useEffect } from "react"
 
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import ProfileDropdown from "./dropdowns/ProfileDropdown ";
-import { ValidateAccessTokenContext } from "@/app/context/ValidateAccessTokenContext";
-import { TokenContext } from "@/app/context/TokenContext";
+import Logout from "./social-login/Logout";
+import Link from "next/link";
+import { backendUrl } from "@/json-data/backendServer";
+import axios from "axios";
+import { useQuery } from '@tanstack/react-query'
+import useGetRoles from "@/hooks/useGetRoles";
 
-const NavBarClient = ({ isTokenValid: initialIsTokenValid }) => {
+const getRoles = async () => {
+    let rolesAPI
+    // try {
+    rolesAPI = await axios.post(`${backendUrl}api/admin-dashboard/get`, {
+        user_email: session?.user?.email
+    });
+
+    console.log(rolesAPI?.data)
+    return rolesAPI.data
+    // setRoles(rolesAPI?.data)
+    // }
+    // catch (error) {
+    //     console.error(error)
+    // }
+
+}
+
+const NavBarClient = ({ session, roles = [] }) => {
     const router = useRouter()
-    // const { setTheme } = useTheme()
-    // const [isDarkModeTrue, setIsDarkModeTrue] = useState(() => {setTheme("system")})
-    const { isTokenValid: contextIsTokenValid } = useContext(TokenContext);
-
-    const [isTokenValid, setIsTokenValid] = useState(initialIsTokenValid)
-    // console.log("NavBarClient", isTokenValid, initialIsTokenValid, contextIsTokenValid)
-    useEffect(() => {
-        // Whenever context changes (due to login/logout), update the local state.
-        if (initialIsTokenValid == false) {
-
-            setIsTokenValid(contextIsTokenValid)
-        }
-
-    }, [contextIsTokenValid, initialIsTokenValid])
-
-    const { setTheme, theme, systemTheme } = useTheme() // Add systemTheme to the destructuring
-    const [isDarkModeTrue, setIsDarkModeTrue] = useState(() => { setTheme("system") })
-
-    function toggleDarkMode() {
-        const currentTheme = theme === "system" ? systemTheme : theme
-        setIsDarkModeTrue(!isDarkModeTrue)
-        setTheme(currentTheme === "dark" ? "light" : "dark")
-    }
-
-    // const websiteName = "http://localhost:3000"
-    // const { isTokenValid, checktokenValidaty } = useContext(ValidateAccessTokenContext);
 
 
+    // const { setTheme, theme, systemTheme } = useTheme()
+    // // const [isDarkModeTrue, setIsDarkModeTrue] = useState(systemTheme)
+
+    // // console.log("theme", theme, systemTheme)
+    // function toggleDarkMode() {
+    //     const currentTheme = theme === "system" ? systemTheme : theme
+    //     // setIsDarkModeTrue(!isDarkModeTrue)
+    //     // setTheme()
+    //     setTheme(currentTheme === "dark" ? "light" : "dark")
+    // }
+    // const [roles, setRoles] = useState([]);
+
+
+
+    // const { data, isLoading, isError, error, refetch } = useQuery({
+    //     queryKey: ['roles'],       // unique key for caching
+    //     queryFn: getRoles,   // function to fetch data
+    //     staleTime: 1000 * 60,     // optional: avoid refetching for 1 min
+    // })
+
+    // const { roles } = useGetRoles(session)
+
+
+    const { setTheme, theme } = useTheme();
+    // const origin = typeof window !== 'undefined' ? window.location.origin : '';
 
 
     return (
@@ -65,75 +83,43 @@ const NavBarClient = ({ isTokenValid: initialIsTokenValid }) => {
                     <li><Button className="mr-3" variant="link" onClick={() => router.push('/create-2')}
                         draggable
                         onDragStart={(e) => e.dataTransfer.setData('text/plain', `${window.location.origin}/create-2`)}>Create 2</Button></li>
-                    {(isTokenValid) ? <li><Button className="mr-3" variant="link" onClick={() => router.push('/dashboard/1')}
+                        
+                    <li><Button className="mr-3" variant="link" onClick={() => router.push('/categories')}
+                        draggable
+                        onDragStart={(e) => e.dataTransfer.setData('text/plain', `${window.location.origin}/categories`)}>Categories</Button></li>
+
+                    {(session) ? <li><Button className="mr-3" variant="link" onClick={() => router.push('/dashboard/1')}
                         draggable
                         onDragStart={(e) => e.dataTransfer.setData('text/plain', `${window.location.origin}/dashboard/1`)}>Dashboard</Button></li> : null}
-                    <li><Button className="mr-3" variant="link" onClick={() => router.push('/stock-list')}
+                    {(session) ? <li><Button className="mr-3" variant="link" onClick={() => router.push('/stock-list')}
                         draggable
-                        onDragStart={(e) => e.dataTransfer.setData('text/plain', `${window.location.origin}/stock-list`)}>Stock List</Button></li>
-                    {/* <li><Button className="mr-5" variant="link" onClick={() => router.push('/test')}
-                        draggable
-                        onDragStart={(e) => e.dataTransfer.setData('text/plain', `${websiteName}/stock-list`)}>Test</Button></li> */}
-                    {/* <li> <Button
-                        className="mr-3"
-                        variant="link"
-                        onClick={() => router.push('/stock-list')}
-                        draggable
-                        onDragStart={(e) => e.dataTransfer.setData('text/plain', `${websiteName}/stock-list`)}>
-                        Stock List
-                    </Button></li> */}
-                    {(!isTokenValid) ? <li> <Button
-                        className="mr-3"
-                        variant=""
-                        onClick={() => router.push('/signup')}
-                        draggable
-                        onDragStart={(e) => e.dataTransfer.setData('text/plain', `${window.location.origin}/signup`)}>
-                        Sign Up
-                    </Button></li> : null}
-                    {(!isTokenValid) ? <li> <Button
-                        className="mr-3"
-                        variant="outline"
-                        onClick={() => router.push('/signin')}
-                        draggable
-                        onDragStart={(e) => e.dataTransfer.setData('text/plain', `${window.location.origin}/signin`)}>
-                        Sign In
-                    </Button></li> : null}
+                        onDragStart={(e) => e.dataTransfer.setData('text/plain', `${window.location.origin}/stock-list`)}>Stock List</Button></li> : null}
 
-
-                    {/* <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="icon">
-                                <SunIcon className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                                <MoonIcon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                                <span className="sr-only">Toggle theme</span>
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => setTheme("light")}>
-                                Light
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setTheme("dark")}>
-                                Dark
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setTheme("system")}>
-                                System
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu> */}
                     <li>
-                        <Button variant="outline" size="icon" onClick={() => {
-                            toggleDarkMode()
-                        }}>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
 
                             <MoonIcon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
                             <SunIcon className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
                         </Button>
                     </li>
-                    {(isTokenValid) ? <li >
+                    {!session && <Link className='underline p-3 border border-black rounded-md' href={"/sign-in"}>Signin</Link>}
+                    {!!session && <Logout />}
+                    {/* {(session) ? <li >
                         <ProfileDropdown />
-                    </li> : null}
+                    </li> : null} */}
                 </ul>
             </div>
+            {/* {console.log(roles.includes("createScan.run"))} */}
+            {(roles.includes("createScan.run")) && <div>
+                <ul>
+                    <li><Button className="mr-3" variant="link" onClick={() => router.push('/admin-dashboard')}
+                        draggable
+                        onDragStart={(e) => e.dataTransfer.setData('text/plain', `${window.location.origin}/admin-dashboard`)}>Admin Dashboard</Button></li>
+                </ul>
+            </div>}
         </>
     );
 

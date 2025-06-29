@@ -1,52 +1,58 @@
 import axios from 'axios';
-import React, { useContext } from 'react'
+import React from 'react'
 import DashBoardPagination from '@/components/DashBoardPagination';
-import { cookies } from 'next/headers';
-// import { useRouter } from 'next/navigation';
 import { notFound, redirect } from 'next/navigation'
-import { backendUrl } from '@/json-data/backendServer';
-import { TokenContext } from '@/app/context/TokenContext';
+import { backendUrl, serverSideBackendUrl } from '@/json-data/backendServer';
 
-export const metadata = {
-    title: "Dashboard",
-    description: "",
+import { auth } from '@/auth';
+
+// export const metadata = {
+//     title: "Dashboard",
+//     description: "",
+// };
+
+export const generateMetadata = () => {
+  return {
+    title: "Dashboard | MySiteName", // 👈 good for SEO
+    description: "Your Dashboard trading strategies and more.", // optional
+  };
 };
 
 const Dashboard = async ({ params }) => {
-    const cookieStore = cookies();
-    const tokenCookie = cookieStore.get('jwt_token');
 
-    const token = tokenCookie?.value;
-    // const { token } = useContext(TokenContext);
-
-    if (!token) {
-        // Handle case where no token is present
-
-        redirect(`/signin`)
-
+    const session = await auth();
+    console.log(session)
+    if (!session) {
+        redirect("/sign-in")
     }
 
-    try {
-        const response = await axios.get(`${backendUrl}equations/?page=${params.page}&noOfItems=5`, {
-            headers: {
-                'Authorization': `Bearer ${token}` // Recommended way to pass JWT
-            }
-        });
+    console.log("backendUrl", backendUrl)
 
-        const temp = response.data;
+
+    try {
+        const url = `${serverSideBackendUrl}equations/?page=${params.page}&noOfItems=5`
+        console.log(url)
+        const response = await axios.post(url, {
+            user_email: session?.user?.email || null
+        });
+        console.log(response)
+        const temp = response?.data;
 
         return (
             <DashBoardPagination
                 items={temp["items"]}
                 totalPages={temp["total_no_of_pages"]}
                 page={temp["page"]}
-                token={token}
+
+                session={session}
             />
         );
     } catch (error) {
-        console.error('Error fetching data:', error.response.data.detail);
+
+        console.error('Error fetching data:', error?.response?.data?.detail);
+        console.error(error)
         if (error["status"] == 404) {
-            // return <div>Error loading dashboard</div>
+
             notFound()
         }
 

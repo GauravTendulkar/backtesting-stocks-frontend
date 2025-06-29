@@ -52,12 +52,12 @@ const TokenContextProvider = (props) => {
         }
     }
 
-    useEffect(() => {
-        // console.log("token  *****************", token)
+    // useEffect(() => {
+    //     // console.log("token  *****************", token)
 
-        checktokenValidaty()
+    //     checktokenValidaty()
 
-    }, [token])
+    // }, [token])
 
     return (
 

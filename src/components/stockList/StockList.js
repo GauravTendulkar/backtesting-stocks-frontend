@@ -3,11 +3,51 @@
 import React, { useContext, useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { StockListContext } from "@/app/context/StockListContext";
+import useStockList from "@/hooks/useStockList";
+import axios from "axios";
+import { backendUrl } from "@/json-data/backendServer";
 
-const StockList = () => {
+const StockList = ({ session, data }) => {
     const { setTheme, theme, systemTheme } = useTheme();
     const currentTheme = theme === "system" ? systemTheme : theme;
-    const { stockData, setStockData, saveStockData } = useContext(StockListContext);
+    const { stockData, setStockData, saveStockData, getStockData, setSessionStockList } = useContext(StockListContext);
+
+    useEffect(() => {
+        setStockData(data)
+    }, [data])
+
+    useEffect(() => {
+        setSessionStockList(session)
+    }, [session])
+
+    // useEffect(() => {
+
+    //     // setSessionStockList(session)
+    //     async function getStockDataTemp() {
+    //         try {
+
+
+
+    //             const response = await axios.post(`${backendUrl}api/stock-list/get/`, {
+    //                 user_email: session?.user?.email
+    //             });
+    //             // console.log("getStockData token", response.data)
+    //             setStockData(response.data)
+
+    //         }
+    //         catch (error) {
+
+    //             console.log("Error ", error)
+
+    //         }
+    //     }
+    //     getStockDataTemp()
+    // }, [session])
+    // const { saveStockData } = useContext(StockListContext);
+
+    // const { stockData, setStockData, getStockData } = useStockList(session);
+
+    // const [stockData, setStockData] = useState(() => getStockData());
     // const stockData = {
     //     fullStockList: [
     //         "AARTIIND", "ABB", "ABCAPITAL", "ABFRL", "ACC", "ADANIENT",
@@ -128,7 +168,7 @@ const StockList = () => {
                 <button onClick={createNewCustomList} className="bg-blue-500 text-white px-4 py-2 rounded">
                     Create List
                 </button>
-                <button onClick={() => { saveStockData() }} className="bg-blue-500 text-white px-4 py-2 rounded">
+                <button onClick={() => { saveStockData(session) }} className="bg-blue-500 text-white px-4 py-2 rounded">
                     Save
                 </button>
             </div>

@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 
-
+import { ThumbsUp, ThumbsDown } from "lucide-react";
 import Link from 'next/link';
 import DialogForDelete from './DialogForDelete';
 import axios from 'axios';
@@ -12,8 +12,11 @@ import { backendUrl } from '@/json-data/backendServer';
 import { useTheme } from 'next-themes';
 import { useToast } from '@/hooks/use-toast';
 
-const DashBoardPagination = ({ items, totalPages, page, token }) => {
+const DashBoardPagination = ({ items, totalPages, page, session = null }) => {
 
+    if (!session) {
+        redirect("/sign-in")
+    }
 
     const router = useRouter();
     const { theme } = useTheme();
@@ -26,10 +29,8 @@ const DashBoardPagination = ({ items, totalPages, page, token }) => {
 
         try {
 
-            const response = await axios.delete(`${backendUrl}equations/${id}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}` // Recommended way to pass JWT
-                }
+            const response = await axios.post(`${backendUrl}equations/delete/${id}`, {
+                user_email: session?.user?.email || null
             });
             if (items.length == 1 & page > 1) {
                 router.push(`/dashboard/${page - 1}`)
@@ -68,42 +69,57 @@ const DashBoardPagination = ({ items, totalPages, page, token }) => {
 
     return (
         <>
-            <div className="container mx-auto space-y-6 mt-6 mb-6 px-4 md:px-8">
-
-                {/* Empty State - Show Create Strategy Card */}
-                {items.length === 0 && page === 1 ? (
-                    <Card className="flex flex-col justify-center items-center h-full py-12 px-6 rounded-xl shadow-md space-y-6 
-                                bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200">
-                        <h2 className="text-xl font-semibold">Create a New Strategy</h2>
+            <div className="container mx-auto mt-6 mb-6 px-4 md:px-8 space-y-6">
+                {/* Empty State */}
+                {items.length === 0 && page === 1 && (
+                    <Card className="flex flex-col items-center justify-center py-12 px-6 rounded-2xl shadow bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200">
+                        <h2 className="text-xl font-semibold mb-4">Create a New Strategy</h2>
                         <Button
                             onClick={() => router.push(`/create-2`)}
                             className="px-6 py-2 text-lg"
-                        >Create</Button>
+                        >
+                            Create
+                        </Button>
                     </Card>
-                ) : null}
+                )}
 
-                {/* List of Strategies */}
+                {/* Strategy Cards */}
                 <div className="space-y-4">
                     {items.map((e) => (
-                        <Card key={e._id} className="p-6 rounded-xl shadow-md border 
-                                                 bg-white dark:bg-gray-900 
-                                                 text-gray-700 dark:text-gray-300">
-                            <div className="flex flex-col space-y-3">
-
+                        <Card
+                            key={e._id}
+                            className="p-6 rounded-2xl shadow-md border bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300"
+                        >
+                            <div className="flex flex-col gap-3">
+                                {/* Title */}
                                 <Button
                                     variant="link"
-                                    className="text-lg font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                                    className="text-lg font-semibold text-blue-600 dark:text-blue-400 hover:underline w-fit"
                                     onClick={() => router.push(`/create-2/${e.link}`)}
                                     draggable
-                                    onDragStart={(event) => event.dataTransfer.setData('text/plain', `${window.location.origin}/create-2/${e.link}`)}
+                                    onDragStart={(event) =>
+                                        event.dataTransfer.setData('text/plain', `${window.location.origin}/create-2/${e.link}`)
+                                    }
                                 >
                                     {e.title}
                                 </Button>
 
-
-                                <div className="text-gray-600 dark:text-gray-400 text-sm">
+                                {/* Timestamps */}
+                                <div className="text-sm text-gray-600 dark:text-gray-400">
                                     <p><strong>Updated:</strong> {new Date(e.updated_at).toLocaleString()}</p>
                                     <p><strong>Created:</strong> {new Date(e.created).toLocaleString()}</p>
+                                </div>
+
+                                {/* Likes/Dislikes */}
+                                <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                                    <div className="flex items-center gap-1">
+                                        <ThumbsUp size={18} className="text-green-600" />
+                                        <span>{e.likes ?? 0}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                        <ThumbsDown size={18} className="text-red-600" />
+                                        <span>{e.dislikes ?? 0}</span>
+                                    </div>
                                 </div>
 
                                 {/* Delete Button */}
@@ -124,19 +140,19 @@ const DashBoardPagination = ({ items, totalPages, page, token }) => {
                     ))}
                 </div>
 
-
+                {/* Pagination */}
                 <Pagination page={page} totalPages={totalPages} className="mt-6" />
-
             </div>
 
-            {isDialogOpen &&
+            {/* Delete Confirmation Dialog */}
+            {isDialogOpen && (
                 <DialogForDelete
                     open={isDialogOpen}
                     setOpen={setIsDialogOpen}
                     valueID={deleteID}
                     handleDeleteProp={handleDelete}
                 />
-            }
+            )}
         </>
     );
 

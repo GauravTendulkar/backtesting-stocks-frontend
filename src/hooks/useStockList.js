@@ -1,37 +1,39 @@
-"use client";
-import { backendUrl, serverSideBackendUrl } from '@/json-data/backendServer';
-import axios from 'axios';
-import { createContext, useContext, useEffect, useState } from 'react'
-import Cookies from 'js-cookie';
-import { useToast } from '@/hooks/use-toast';
-import { ToastAction } from '@/components/ui/toast';
-// import { ToastAction } from '../ui/toast';
-import { useRouter } from 'next/navigation';
-import { TokenContext } from './TokenContext';
-import { auth } from '@/auth';
+// import { callAuth } from "@/app/actions";
+import { auth } from "@/auth";
+import axios from "axios";
+import { useEffect, useState } from "react";
 
-export const StockListContext = createContext(null);
+const useStockList = ({ session = null }) => {
 
-
-const StockListContextProvider = (props) => {
-
-    // const token = Cookies.get('jwt_token');
     const [stockData, setStockData] = useState(null);
-    // const { token } = useContext(TokenContext);
-    const [sessionStockList, setSessionStockList] = useState(null)
+    // const session = await auth();
 
-
-    const getStockData = async (session) => {
+    const getStockData = async () => {
         try {
 
 
+            // console.log(session)
+            // if (!session) {
+            //     redirect("/sign-in")
+            // }
+            // console.log("StockListContextProvider", token)
+            // if (session) {
 
+
+            // const session = await callAuth();
             const response = await axios.post(`${backendUrl}api/stock-list/get/`, {
                 user_email: session?.user?.email
             });
             // console.log("getStockData token", response.data)
+            console.log("stocklist ************************", response.data)
+            // return response.data
             setStockData(response.data)
-
+            // }
+            // else {
+            //     const response = await axios.get(`${backendUrl}api/stock-list/get/`);
+            //     console.log("getStockData notoken", response.data)
+            //     setStockData(response.data)
+            // }
         }
         catch (error) {
 
@@ -41,29 +43,21 @@ const StockListContextProvider = (props) => {
     }
 
 
-    // useEffect(() => {
-    //     getStockData()
-    // }, [sessionStockList])
+    useEffect(() => {
+        getStockData()
+    }, [])
 
-
-    const { toast } = useToast()
-    const router = useRouter();
     const saveStockData = async () => {
 
 
         try {
             // console.log("******************************", stockData.customStockList)
-            if (sessionStockList) {
-                console.log(
-                    {
-                        "stock_list": stockData.customStockList,
-                        "user_email": sessionStockList?.user?.email
+            if (token) {
+                const response = await axios.put(`${backendUrl}api/stock-list`, stockData.customStockList, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
                     }
-
-                )
-                const response = await axios.put(`${backendUrl}api/stock-list`, {
-                    "stock_list": stockData.customStockList,
-                    "user_email": sessionStockList?.user?.email
                 });
                 console.log("saveStockData", response)
                 if (response?.status == 200) {
@@ -120,17 +114,11 @@ const StockListContextProvider = (props) => {
 
         }
     }
+    return {
+        stockData, setStockData, getStockData
+    }
 
-
-
-    return (
-
-        <StockListContext.Provider value={{ stockData, setStockData, saveStockData, getStockData, setSessionStockList }}>
-
-            {props.children}
-
-        </StockListContext.Provider>
-    )
 }
 
-export default StockListContextProvider
+export default useStockList
+
