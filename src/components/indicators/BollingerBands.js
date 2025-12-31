@@ -48,7 +48,7 @@ const BollingerBands = (props) => {
     const handleLengthChange = (v) => {
 
         let temp = [...smaUpdate];
-        temp[4]["value"] = v
+        temp[3]["value"] = v
         setSmaUpdate(temp);
         props.passto(temp);
     }
@@ -100,7 +100,7 @@ const BollingerBands = (props) => {
                             setIsOnClickTrue={setIsOnClickTrue}
 
                             variablePass={smaUpdate}
-                            passto={passtoSma}></TimeFrameOption>
+                            passto={passtoSma}></TimeFrameOption> 
                         <Label>Length</Label>
                         <InputInteger value={smaUpdate[3]["value"]} onChange={(e) => handleLengthChange(e)} ></InputInteger>
                         <Label>Basis MA Type</Label>

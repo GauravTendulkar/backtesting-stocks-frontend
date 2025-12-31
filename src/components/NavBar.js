@@ -3,6 +3,7 @@ import NavBarClient from "./NavbarClient";
 import { backendUrl, serverSideBackendUrl } from "@/json-data/backendServer";
 import { auth } from "@/auth";
 import axios from "axios";
+import { getTokenForSessionData } from "@/utils/security";
 
 const NavBar = async () => {
 
@@ -11,9 +12,12 @@ const NavBar = async () => {
     const session = await auth();
     let roles = []
     try {
-        roles = await axios.post(`${serverSideBackendUrl}api/admin-dashboard/get-roles`, {
-            user_email: session?.user?.email
-        });
+        roles = await axios.post(`${serverSideBackendUrl}api/admin-dashboard/get-roles`, {},
+            {
+                headers: {
+                    Authorization: `Bearer ${await getTokenForSessionData(session)}`,
+                }
+            });
 
 
     }

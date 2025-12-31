@@ -1,27 +1,31 @@
 import React, { memo, useEffect, useState } from 'react'
 import ConditionUI from './ConditionUI';
 
-const Quantity = memo(({ valueProp = {}, onChangeProp = () => { }, objectProp }) => {
-    // console.log("Quantity")
-    const [currentComponentState, setCurrentComponentState] = useState(valueProp)
+const Quantity = memo(({ valueProp = {}, objectPath=[],dispachStateEquation, onChangeProp = () => { }, objectProp }) => {
+   
 
-    useEffect(() => {
-        setCurrentComponentState(valueProp)
-    }, [valueProp]);
-
-    const onChange = (data, index) => {
-
-        onChangeProp(data, objectProp)
-    }
     return (
-        <>
-            <ConditionUI
-                indexProp={undefined}
-                valueProp={currentComponentState}
-                objectProp={Object.keys(currentComponentState)[0]}
-                onChangeProp={onChange}
-                disableSwitchProp={objectProp}></ConditionUI>
-        </>
+        <div className="w-full  mx-auto my-4 px-4 ">
+            <div className="rounded-xl border border-gray-200 dark:border-gray-700 shadow-md  p-4 bg-muted">
+                {/* <div className="mb-2 text-lg font-semibold text-gray-800 dark:text-white">
+          Quantity Condition
+        </div> */}
+                <div className="text-sm font-medium text-muted-foreground mb-2">
+                    Quantity Condition
+                </div>
+                <div className="mt-4">
+                    <ConditionUI
+                        indexProp={undefined}
+                        valueProp={valueProp}
+                        objectPath={objectPath}
+                        objectProp={Object.keys(valueProp)[0]}
+                        dispachStateEquation={dispachStateEquation}
+                        
+                        disableSwitchProp={objectProp}
+                    />
+                </div>
+            </div>
+        </div>
     )
 })
 

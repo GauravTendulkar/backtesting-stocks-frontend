@@ -3,7 +3,7 @@
 import { StockListContext } from "@/app/context/StockListContext";
 import React, { memo, useContext, useEffect, useState } from "react";
 
-const StockListSelection = memo(({ valueList = "default", onChangeList, session = null }) => {
+const StockListSelection = ({ valueList = "default", onChangeList, session = null }) => {
     const { stockData, setSessionStockList } = useContext(StockListContext);
 
     // Array of objects where each object has { name, list }
@@ -40,21 +40,21 @@ const StockListSelection = memo(({ valueList = "default", onChangeList, session 
         );
         if (tempList) {
             setSelectedList(tempList.list);
-            if (onChangeList) onChangeList(tempList);
+            onChangeList(tempList);
         } else {
             // Fallback to the default list if selectedListName isn't found
             const defaultList = stockLists.find((list) => list.name === "default");
             if (defaultList) {
                 setSelectedList(defaultList.list);
-                if (onChangeList) onChangeList(defaultList);
+                onChangeList(defaultList);
             } else {
                 setSelectedList([]);
-                if (onChangeList) onChangeList({});
+                onChangeList({});
             }
         }
 
 
-    }, [stockLists, selectedListName, onChangeList]);
+    }, [stockLists, selectedListName]);
 
     const handleSelectChange = (e) => {
         setSelectedListName(e.target.value);
@@ -80,6 +80,6 @@ const StockListSelection = memo(({ valueList = "default", onChangeList, session 
             </select>
         </div>
     );
-});
+};
 
 export default StockListSelection;

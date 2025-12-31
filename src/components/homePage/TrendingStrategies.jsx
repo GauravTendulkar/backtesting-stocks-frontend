@@ -10,11 +10,11 @@ import slugify from "slugify";
 import { Copy, ThumbsUp, ThumbsDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-const TrendingStrategies = () => {
-  const [strategies, setStrategies] = useState([]);
-  const [loading, setLoading] = useState(true);
+const TrendingStrategies = (props) => {
+  const [strategies, setStrategies] = useState(props.data || []);
+  const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [totalPages, setTotalPages] = useState(props.pages || 1);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -35,9 +35,9 @@ const TrendingStrategies = () => {
     }
   };
 
-  useEffect(() => {
-    fetchTrending(1);
-  }, []);
+  // useEffect(() => {
+  //   fetchTrending(1);
+  // }, []);
 
   const handleCopy = (url) => {
     navigator.clipboard.writeText(url);
@@ -92,15 +92,27 @@ const TrendingStrategies = () => {
   // ]
 
   const tagOptions = [
-  { value: "long", label: "Bullish Scan" },
-  { value: "short", label: "Bearish Scan" },
-  { value: "intraday_long", label: "Intraday Bullish Scan" },
-  { value: "intraday_short", label: "Intraday Bearish Scan" },
-  { value: "Other", label: "Other" },
-];
+    { value: "long", label: "Bullish Scan" },
+    { value: "short", label: "Bearish Scan" },
+    { value: "intraday_long", label: "Intraday Bullish Scan" },
+    { value: "intraday_short", label: "Intraday Bearish Scan" },
+    { value: "Other", label: "Other" },
+  ];
 
 
-  if (strategies.length === 0) return null;
+  if (strategies.length === 0) {
+    return (
+      <div className="flex justify-center px-4">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 p-6 max-w-6xl w-full">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className=" h-24 rounded-xl " />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+
 
   return (
     <div className="flex flex-col items-center px-4 ">
@@ -109,7 +121,7 @@ const TrendingStrategies = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {strategies.map((strategy, idx) => {
             const slug = slugify(strategy.link, { lower: true });
-            const strategyUrl = `/create-2/${slug}`;
+            const strategyUrl = `/strategy-builder/${slug}`;
             const fullUrl = `${window.location.origin}${strategyUrl}`;
 
             return (

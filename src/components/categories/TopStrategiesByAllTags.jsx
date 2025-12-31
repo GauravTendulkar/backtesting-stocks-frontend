@@ -15,38 +15,38 @@ const tagOptions = [
   { value: "Other", label: "Other" },
 ];
 
-const TopStrategiesByAllTags = () => {
-  const [tagData, setTagData] = useState({});
-  const [loading, setLoading] = useState(true);
+const TopStrategiesByAllTags = (props) => {
+  const [tagData, setTagData] = useState(props.tagMap || {});
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    const fetchAllTagsData = async () => {
-      try {
-        const results = await Promise.all(
-          tagOptions.map((tag) =>
-            axios
-              .get(`${backendUrl}api/strategy_categories/top-liked-strategies`, {
-                params: { tag: tag.value },
-              })
-              .then((res) => ({ tag: tag.value, strategies: res.data || [] }))
-          )
-        );
+  // useEffect(() => {
+  //   const fetchAllTagsData = async () => {
+  //     try {
+  //       const results = await Promise.all(
+  //         tagOptions.map((tag) =>
+  //           axios
+  //             .get(`${backendUrl}api/strategy_categories/top-liked-strategies`, {
+  //               params: { tag: tag.value },
+  //             })
+  //             .then((res) => ({ tag: tag.value, strategies: res.data || [] }))
+  //         )
+  //       );
 
-        const tagMap = {};
-        results.forEach(({ tag, strategies }) => {
-          tagMap[tag] = strategies;
-        });
-        setTagData(tagMap);
-      } catch (error) {
-        console.error("Error fetching top strategies by tags", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  //       const tagMap = {};
+  //       results.forEach(({ tag, strategies }) => {
+  //         tagMap[tag] = strategies;
+  //       });
+  //       setTagData(tagMap);
+  //     } catch (error) {
+  //       console.error("Error fetching top strategies by tags", error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
 
-    fetchAllTagsData();
-  }, []);
+  //   fetchAllTagsData();
+  // }, []);
 
   if (loading) return <div className="p-4">Loading...</div>;
 
@@ -64,7 +64,7 @@ const TopStrategiesByAllTags = () => {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {strategies.map((s, i) => {
                 const slug = slugify(s.link || s.title || "", { lower: true });
-                const strategyUrl = `/create-2/${slug}`;
+                const strategyUrl = `/strategy-builder/${slug}`;
                 const fullUrl = `${window.location.origin}${strategyUrl}`;
 
                 return (

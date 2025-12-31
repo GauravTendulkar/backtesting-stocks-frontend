@@ -56,13 +56,16 @@ export const { handlers: { GET, POST },
                     token.accessToken = account.access_token;
                     token.refreshToken = account.refresh_token;
                     token.expiresAt = account.expires_at; // optional
+                    token.idToken = account.id_token;
+                    // console.log("token.idToken *************************************", account.access_token ,"***********")
                 }
-                console.log("token", token)
+                // console.log("token", token)
                 return token;
             },
             async session({ session, token }) {
                 // Make accessToken available in client & server
                 session.accessToken = token.accessToken;
+                session.idToken = token.idToken;
                 return session;
             },
 

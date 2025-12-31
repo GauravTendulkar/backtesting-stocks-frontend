@@ -1,6 +1,6 @@
 "use client"
 
-import React, { memo, useCallback, useContext, useEffect, useRef, useState } from 'react'
+import React, { memo, useCallback, useContext, useEffect, useReducer, useRef, useState } from 'react'
 import EntryUI from '@/components/logicUI2/EntryUI';
 import { Card } from '@/components/ui/card';
 import { ReloadIcon } from '@radix-ui/react-icons';
@@ -20,51 +20,465 @@ import Quantity from '@/components/logicUI2/Quantity';
 import ExitUI from '@/components/logicUI2/ExitUI';
 import { ToastAction } from '../ui/toast';
 import { DateRangePickerTradingView } from '../DateRangePickerTradingView';
-// import TimeCounter from '../TimeCounter';
 import { useToast } from '@/hooks/use-toast';
-import TradeTable from '../tables/TradeTable ';
+// import TradeTable from '../tables/TradeTable';
 import { StockListContext } from '@/app/context/StockListContext';
 import LikeDislikeButton from '../likeDislike/LikeDislikeButton';
-// import PNLLineChart from '../pnlCharts/PNLLineChart';
+import { getTokenForClientSessionData } from '@/utils/security';
+import TradeAnalyticsMetrics from '../pnlCharts/TradeAnalyticsMetrics';
+import { format, subMonths } from 'date-fns';
+// import { Label } from 'recharts';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Label } from '../ui/label';
+import StockBarGraph from '../pnlCharts/StockBarGraph';
+import { decompressGzippedBase64Json } from '@/function/dataDecompression';
+import ExportButtons from '../tables/ExportButtons';
+import { addExit, condition, group } from '@/json-data/loading-create';
+import { slice } from 'lodash';
+// import VirtualBarChart from '../pnlCharts/VirtualBarChart';
 
-// const EntryPrice = dynamic(() => import('@/components/logicUI2/EntryPrice'));
-// const Quantity = dynamic(() => import('@/components/logicUI2/Quantity'));
-// const ExitUI = dynamic(() => import('@/components/logicUI2/ExitUI'));
-// const ToastAction = dynamic(() => import('../ui/toast'));
-// const DateRangePickerTradingView = dynamic(() => import('../DateRangePickerTradingView'));
 const TimeCounter = dynamic(() => import('../TimeCounter'));
-// const useToast = dynamic(() => import('@/hooks/use-toast'));
-// const TradeTable = dynamic(() => import('../tables/TradeTable'));
 const PNLLineChart = dynamic(() => import('../pnlCharts/PNLLineChart'));
+const VirtualBarChart = dynamic(() => import('../pnlCharts/VirtualBarChart'));
+const TradeTable = dynamic(() => import('../tables/TradeTable'));
 
+// const StockListSelection1 = React.memo(StockListSelection)
 
-const StockListSelection1 = React.memo(StockListSelection)
-
-const CollectionOfAllComponents = memo(({ valueProp = {}, session = null, data }) => {
+const CollectionOfAllComponents = ({ valueProp = {}, session = null, data }) => {
 
     const pathname = usePathname();
-    console.log("pathname", pathname)
+    // console.log("pathname", pathname)
     const router = useRouter();
 
 
-    const [currentComponentState, setCurrentComponentState] = useState(valueProp);
+
+
+    function cloneLevel(obj) {
+        return Array.isArray(obj) ? obj.slice() : { ...obj };
+
+    }
+    const loopThroughObj = (sourceState, path) => {
+        const nextState = cloneLevel(sourceState);
+        let src = sourceState;
+        let dst = nextState;
+        for (let i = 0; i < path.length - 1; i++) {
+            const key = path[i];
+            const nextSrc = src?.[key];
+            const nextDst = cloneLevel(nextSrc ?? {});
+            dst[key] = nextDst;
+            src = nextSrc ?? {};
+            dst = nextDst;
+        }
+        const lastKey = path[path.length - 1]
+
+        return { src, dst, lastKey, cloneState: nextState }
+    }
+
+    const reducer = (state, action) => {
+
+        if (action.type === "setFromDate_CollectionOfAllComponents") {
+            // let temp = { ...state }
+            // temp["equation"]["dateRange"]["from"] = action.value;
+
+            return {
+                ...state,
+                equation: {
+                    ...state.equation,
+                    dateRange: {
+                        ...state.equation.dateRange,
+                        from: action.value
+                    }
+                }
+            }
+
+        }
+        else if (action.type === "getDateRange_CollectionOfAllComponents") {
+            // const temp = { ...state };
+            // temp["equation"]["dateRange"] = action.value;
+
+            return {
+                ...state,
+                equation: {
+                    ...state.equation,
+                    dateRange: action.value
+                }
+            }
+        }
+        else if (action.type === "handleTradeModeChange_CollectionOfAllComponents") {
+
+
+            return { ...state, tradeMode: action.value }
+
+        }
+        else if (action.type === "addGroup_EquationUI") {
+
+
+
+            // return pushAtPath(state, action.path, group);
+
+            let path = action.path
+            if (!Array.isArray(path) || path.length === 0) return state;
+
+            let { src, dst, lastKey, cloneState } = loopThroughObj(state, path)
+
+            const current = src?.[lastKey];
+            dst[lastKey] = [...current, group]
+            return cloneState;
+        }
+
+        else if (action.type === "removeGroup_EquationUI") {
+
+
+
+            let path = action.path
+            const removeIndex = path.slice(-1)
+            if (!Array.isArray(path) || path.length === 0) return state;
+
+            let { src, dst, lastKey, cloneState } = loopThroughObj(state, path.slice(0, -1))
+
+            // dst = [...src.splice(lastKey, 1)]
+            // return cloneState;
+            let a = [...src[lastKey]]
+            a.splice(removeIndex, 1)
+            dst[lastKey] = [...a]
+            return cloneState;
+        }
+        else if (action.type === "removeCondition_ConditionUI") {
+
+            let path = action.path
+            const removeIndex = path.slice(-1)
+            if (!Array.isArray(path) || path.length === 0) return state;
+
+            let { src, dst, lastKey, cloneState } = loopThroughObj(state, path.slice(0, -1))
+
+            // const current = src?.[lastKey];
+            // dst[lastKey] = [...current, condition]
+            // dst = [...src.splice(lastKey, 1)]
+            // return cloneState;
+            let a = [...src[lastKey]]
+            a.splice(removeIndex, 1)
+            dst[lastKey] = [...a]
+            return cloneState;
+        }
+        else if (action.type === "addCondition_EquationUI") {
+
+
+
+            let path = action.path
+            if (!Array.isArray(path) || path.length === 0) return state;
+
+            let { src, dst, lastKey, cloneState } = loopThroughObj(state, path)
+
+            const current = src?.[lastKey];
+            dst[lastKey] = [...current, condition]
+            return cloneState;
+        }
+        else if (action.type === "toggleANDOR_EquationUI") {
+
+
+            let path = action.path
+            if (!Array.isArray(path) || path.length === 0) return state;
+
+            let { src, dst, lastKey, cloneState } = loopThroughObj(state, path)
+            // console.log("dst", dst, src)
+            const current = src?.[lastKey];
+            if (lastKey === "AND") {
+                dst["OR"] = [...current]
+                delete dst["AND"]
+            }
+            else if (lastKey === "OR") {
+                dst["AND"] = [...current]
+                delete dst["OR"]
+            }
+
+            return cloneState;
+
+        }
+        else if (action.type === "onChange_IndicatorUI") {
+            // console.log("onChange", action.value)
+            let path = action.path
+            if (!Array.isArray(path) || path.length === 0) return state;
+
+            let { src, dst, lastKey, cloneState } = loopThroughObj(state, path)
+            // console.log("dst", dst, src)
+            // const current = src?.[lastKey];
+            // console.log("dst", dst, lastKey)
+            dst[lastKey] = [...action.value]
+            return cloneState;
+
+        }
+        else if (action.type === "removeIndicator_IndicatorUI") {
+
+            // let path = action.path
+
+            // if (!Array.isArray(path) || path.length === 0) return state;
+
+            // let { src, dst, lastKey, cloneState } = loopThroughObj(state, path)
+            // // console.log("dst", dst, src)
+            // // const current = src?.[lastKey];
+            // dst = [...src.splice(lastKey, 1)]
+            // return cloneState;
+
+
+            let path = action.path
+            const removeIndex = path.slice(-1)
+            if (!Array.isArray(path) || path.length === 0) return state;
+
+            let { src, dst, lastKey, cloneState } = loopThroughObj(state, path.slice(0, -1))
+            // console.log("dst", dst, src, lastKey)
+            // const current = src?.[lastKey];
+            let a = [...src[lastKey]]
+            a.splice(removeIndex, 1)
+            dst[lastKey] = [...a]
+            return cloneState;
+        }
+        else if (action.type === "addIndicator_ConditionUI") {
+
+            let path = action.path
+            if (!Array.isArray(path) || path.length === 0) return state;
+
+            let { src, dst, lastKey, cloneState } = loopThroughObj(state, path)
+            // console.log("dst", dst, src)
+            const current = src?.[lastKey];
+            dst[lastKey] = [...current, action.value]
+            return cloneState;
+        }
+        else if (action.type === "toggleSwitch_ConditionUI") {
+
+            let path = action.path
+            if (!Array.isArray(path) || path.length === 0) return state;
+
+            let { src, dst, lastKey, cloneState } = loopThroughObj(state, path)
+
+            const current = src?.[lastKey];
+            dst[lastKey] = !current;
+            return cloneState;
+
+        }
+        else if (action.type === "dragAndDrop_ConditionUI") {
+
+            let path = action.path
+            if (!Array.isArray(path) || path.length === 0) return state;
+
+            let { src, dst, lastKey, cloneState } = loopThroughObj(state, path)
+
+            // const current = src?.[lastKey];
+            dst[lastKey] = [...action.value];
+            return cloneState;
+
+        }
+        else if (action.type === "handlePaste_ConditionUI") {
+
+
+            let path = action.path
+            if (!Array.isArray(path) || path.length === 0) return state;
+
+            let { src, dst, lastKey, cloneState } = loopThroughObj(state, path)
+            // console.log("dst", dst, src)
+            const current = src?.[lastKey];
+            dst[lastKey] = [...current, action.value]
+            return cloneState;
+
+
+        }
+        else if (action.type === "handleConditionAndGroupPaste_EquationUI") {
+
+
+            let path = action.path
+            if (!Array.isArray(path) || path.length === 0) return state;
+
+            let { src, dst, lastKey, cloneState } = loopThroughObj(state, path)
+            console.log("dst", dst, src)
+            console.log(lastKey)
+            const current = src?.[lastKey];
+            dst[lastKey] = [...current, action.value]
+            return cloneState;
+
+
+        }
+        else if (action.type === "toggleSwitch_EquationUI") {
+
+            let path = action.path
+            if (!Array.isArray(path) || path.length === 0) return state;
+
+            let { src, dst, lastKey, cloneState } = loopThroughObj(state, path)
+
+            const current = src?.[lastKey];
+            dst[lastKey] = !current;
+            return cloneState;
+        }
+        else if (action.type === "moveDown_ExitUI") {
+
+            // let path = action.path
+            // if (!Array.isArray(path) || path.length === 0) return state;
+
+            // let { src, dst, lastKey, cloneState } = loopThroughObj(state, path)
+            // if ((lastKey + 1) <= path.length - 1) {
+
+
+            //     const current = src?.[lastKey];
+            //     // console.log("dst", dst, src, current)
+            //     src.splice(lastKey, 1)
+            //     src.splice(lastKey + 1, 0, current)
+            //     // console.log("dst", src)
+
+            //     dst = [...src];
+            // }
+            // return cloneState;
+
+            let path = action.path
+            const swapIndex = path.slice(-1)
+            if (!Array.isArray(path) || path.length === 0) return state;
+
+            let { src, dst, lastKey, cloneState } = loopThroughObj(state, path.slice(0, -1))
+            // console.log("dst", dst, src, lastKey)
+            // const current = src?.[lastKey];
+            let a = [...src[lastKey]]
+            // console.log("moveDown_ExitUI", a)
+            const current = a?.[swapIndex];
+            
+            a.splice(swapIndex, 1)
+            a.splice(swapIndex + 1, 0, current)
+            // a.splice(removeIndex, 1)
+            dst[lastKey] = [...a]
+            return cloneState;
+
+        }
+        else if (action.type === "moveUp_ExitUI") {
+
+            // let path = action.path
+            // if (!Array.isArray(path) || path.length === 0) return state;
+
+            // let { src, dst, lastKey, cloneState } = loopThroughObj(state, path)
+            // if ((lastKey - 1) >= 0) {
+
+
+            //     const current = src?.[lastKey];
+            //     // console.log("dst", dst, src, current)
+            //     src.splice(lastKey, 1)
+            //     src.splice(lastKey - 1, 0, current)
+            //     // console.log("dst", src)
+
+            //     dst = [...src];
+            // }
+            // return cloneState;
+
+            
+
+
+            let path = action.path
+            const swapIndex = path.slice(-1)
+            if (!Array.isArray(path) || path.length === 0) return state;
+
+            let { src, dst, lastKey, cloneState } = loopThroughObj(state, path.slice(0, -1))
+            // console.log("dst", dst, src, lastKey)
+            // const current = src?.[lastKey];
+            let a = [...src[lastKey]]
+            // console.log("moveDown_ExitUI", a)
+            const current = a?.[swapIndex];
+            
+            a.splice(swapIndex, 1)
+            a.splice(swapIndex - 1, 0, current)
+            // a.splice(removeIndex, 1)
+            dst[lastKey] = [...a]
+            return cloneState;
+
+        }
+        else if (action.type === "removeExitCondition_ExitUI") {
+
+            // let path = action.path
+            // if (!Array.isArray(path) || path.length === 0) return state;
+
+            // let { src, dst, lastKey, cloneState } = loopThroughObj(state, path)
+            // // console.log("dst", dst, src)
+            // // const current = src?.[lastKey];
+            // dst = [...src.splice(lastKey, 1)]
+            // return cloneState;
+
+            let path = action.path
+            const removeIndex = path.slice(-1)
+            if (!Array.isArray(path) || path.length === 0) return state;
+
+            let { src, dst, lastKey, cloneState } = loopThroughObj(state, path.slice(0, -1))
+            // console.log("dst", dst, src, lastKey)
+            // const current = src?.[lastKey];
+            let a = [...src[lastKey]]
+            a.splice(removeIndex, 1)
+            dst[lastKey] = [...a]
+            return cloneState;
+
+        }
+        else if (action.type === "toggleSwitch_ExitUI") {
+
+            let path = action.path
+            if (!Array.isArray(path) || path.length === 0) return state;
+
+            let { src, dst, lastKey, cloneState } = loopThroughObj(state, path)
+
+            const current = src?.[lastKey];
+            dst[lastKey] = !current;
+            return cloneState;
+
+        }
+        else if (action.type === "addExitCondition_ExitUI") {
+
+            let path = action.path
+            if (!Array.isArray(path) || path.length === 0) return state;
+
+            let { src, dst, lastKey, cloneState } = loopThroughObj(state, path)
+            // console.log("dst", dst, src)
+            const current = src?.[lastKey];
+            dst[lastKey] = [...current, addExit]
+            return cloneState;
+
+        }
+        else if (action.type === "onChange_ExitLabel") {
+
+            let path = action.path
+            if (!Array.isArray(path) || path.length === 0) return state;
+
+            let { src, dst, lastKey, cloneState } = loopThroughObj(state, path)
+            // console.log("dst", dst, src)
+            const current = src?.[lastKey];
+            dst[lastKey] = action.value
+            return cloneState;
+
+        }
+        else if (action.type === "handleStockListChange") {
+
+            return { ...state, "stockListName": action.value }
+
+        }
+
+    }
+
+    const [stateEquation, dispachStateEquation] = useReducer(reducer, valueProp)
+
+    useEffect(() => {
+        console.log("useReducer", stateEquation)
+    }, [stateEquation])
 
     const { stockData, setStockData, saveStockData, getStockData, setSessionStockList } = useContext(StockListContext);
+
+
+    // if (!!data) {
+    //     setStockData(data)
+    // }
+
+    // if (!!session) {
+    //     setSessionStockList(session)
+    // }
 
     useEffect(() => {
         setStockData(data)
     }, [data])
 
+
+
     useEffect(() => {
         setSessionStockList(session)
     }, [session])
-    useEffect(() => {
 
-
-        if (JSON.stringify(valueProp) !== JSON.stringify(currentComponentState)) {
-            setCurrentComponentState(valueProp)
-        }
-    }, [valueProp]);
 
 
     const [runButton, setRunButton] = useState(true);
@@ -74,26 +488,12 @@ const CollectionOfAllComponents = memo(({ valueProp = {}, session = null, data }
     const [stockListDisplay, setStockListDisplay] = useState([])
     const [stockListName, setStockListName] = useState(valueProp.stockListName)        //valueProp.stockListName
     const [command, setCommand] = useState("reset");
+    const [stocksMaxLength, setStocksMaxLength] = useState(null);
 
     const { toast } = useToast()
-    useEffect(() => {
-        console.log("Create2", currentComponentState)
-    }, [currentComponentState])
-
-    const onChange = (data, obj) => {
-        let temp = { ...currentComponentState }
-        temp["equation"][obj] = data
-
-        setCurrentComponentState({ ...temp })
-        // console.log("Create2", temp)
 
 
-    }
 
-
-    useEffect(() => {
-        console.log("stockListName C2", stockListName)
-    }, [stockListName])
 
     const removeIfSwitchIsFalse = () => {
 
@@ -162,8 +562,8 @@ const CollectionOfAllComponents = memo(({ valueProp = {}, session = null, data }
 
         }//remove start
 
-        // let temp = { ...currentComponentState }
-        let temp = JSON.parse(JSON.stringify(currentComponentState))
+
+        let temp = JSON.parse(JSON.stringify(stateEquation))
 
         temp["equation"]["entry"] = remove(temp["equation"]["entry"], 0)
 
@@ -180,7 +580,7 @@ const CollectionOfAllComponents = memo(({ valueProp = {}, session = null, data }
         }
 
         temp["equation"]["exitCollection"] = tempAppend
-        temp["equation"]["scanCategory"] = currentComponentState["scanCategory"]
+        temp["equation"]["scanCategory"] = stateEquation["scanCategory"]
         temp["equation"]["stockList"] = stockListDisplay
         return temp["equation"]
     }
@@ -191,13 +591,13 @@ const CollectionOfAllComponents = memo(({ valueProp = {}, session = null, data }
 
     const pnlResultFn = (data) => {
         let groupedData = Object.values(
-            data.reduce((acc, { date, pnl, stock }) => {
-                if (!acc[date]) {
-                    acc[date] = { date, pnl: 0, stocks: [] };
+            data.reduce((acc, { entry_date, pnl, stock }) => {
+                if (!acc[entry_date]) {
+                    acc[entry_date] = { entry_date, pnl: 0, stocks: [] };
                 }
-                acc[date].pnl += pnl;  // Sum PNL
-                if (!acc[date].stocks.includes(stock)) {
-                    acc[date].stocks.push(stock); // Unique Stocks in Array
+                acc[entry_date].pnl += pnl;  // Sum PNL
+                if (!acc[entry_date].stocks.includes(stock)) {
+                    acc[entry_date].stocks.push(stock); // Unique Stocks in Array
                 }
                 return acc;
             }, {})
@@ -205,7 +605,7 @@ const CollectionOfAllComponents = memo(({ valueProp = {}, session = null, data }
 
         function sortDateArray(dateArray) {
 
-            return dateArray.sort((a, b) => new Date(a["date"]) - new Date(b["date"]));
+            return dateArray.sort((a, b) => new Date(a["entry_date"]) - new Date(b["entry_date"]));
         }
 
         groupedData = sortDateArray(groupedData);
@@ -228,6 +628,8 @@ const CollectionOfAllComponents = memo(({ valueProp = {}, session = null, data }
     }
 
     const [errorDateRange, setErrorDateRange] = useState(null);
+    const [errorDateRangeFrom, setErrorDateRangeFrom] = useState("");
+
 
     const pnlRef = useRef(null);
 
@@ -244,6 +646,9 @@ const CollectionOfAllComponents = memo(({ valueProp = {}, session = null, data }
     useEffect(() => {
         handleScroll()
     }, [pnlResult]);
+
+
+
 
     useEffect(() => {
         if (errorDateRange) {
@@ -266,22 +671,35 @@ const CollectionOfAllComponents = memo(({ valueProp = {}, session = null, data }
         try {
             setErrorDateRange(null);
             setPnlResult([]);
-            const response = await axios.post(`${backendUrl}api/run-backtesting`, {
+            // console.log("getPostData **************************", await getTokenForClientSessionData())
+            const token = await getTokenForClientSessionData()
+
+            const response = await axios.post(`${backendUrl}api/run-backtesting/entry_exit_backtest`, {
                 ...getPostData,
-                user_email: session?.user?.email || null,
+                // user_email: session?.user?.email || null,
                 // user_email: undefined || null,
-                contentId: currentComponentState["_id"],
-                link: currentComponentState["link"],
-            });
+                contentId: stateEquation["_id"],
+                link: stateEquation["link"],
+                tradeMode: stateEquation?.["tradeMode"] || "entry_exit_backtest"
+            },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    }
+                });
+
             let r = response.data.data_result
+
+            r = decompressGzippedBase64Json(r)
             console.log('Success:', JSON.parse(r));
             setPnlResult(JSON.parse(r))
             // handleScroll()
         } catch (error) {
-            // console.error('Error:', error);
+            console.error('Error:', error);
             if (error?.response?.status === 400) {
                 console.error('Error***********:', error?.response?.data?.detail);
-                setErrorDateRange(error?.response?.data?.detail)
+                setErrorDateRange(error?.response?.data?.detail?.error)
+                setErrorDateRangeFrom(error?.response?.data?.detail?.fromDate)
 
             }
 
@@ -296,12 +714,79 @@ const CollectionOfAllComponents = memo(({ valueProp = {}, session = null, data }
         setRunButton(true)
     };
 
+    const postDataConditionScanner = async () => {
+        setRunButton(false)
+        const getPostData = removeIfSwitchIsFalse()
+        // console.log("postDataConditionScanner", getPostData)
+
+        console.time('PostDataRequest');
+
+        setCommand("reset");
+        setTimeout(() => {
+            setCommand("start");
+        }, 100);
+        try {
+            setErrorDateRange(null);
+            setPnlResult([]);
+            const response = await axios.post(`${backendUrl}api/run-backtesting/condition_scanner`, {
+                ...getPostData,
+                contentId: stateEquation["_id"],
+                link: stateEquation["link"],
+                tradeMode: stateEquation?.["tradeMode"] || "condition_scanner"
+            },
+                {
+                    headers: {
+                        Authorization: `Bearer ${await getTokenForClientSessionData()}`,
+                    }
+                });
+            let r = decompressGzippedBase64Json(response.data.data_result);
+            console.log('Success:', JSON.parse(r));
+            setStocksMaxLength(response?.data?.max_length)
+            setPnlResult(JSON.parse(r))
+            // handleScroll()
+        } catch (error) {
+            // console.error('Error:', error);
+            if (error?.response?.status === 400) {
+                // console.error('Error***********:', error?.response?.data?.detail);
+                setErrorDateRange(error)
+                setErrorDateRange(error?.response?.data?.detail?.error)
+
+                setErrorDateRangeFrom(error?.response?.data?.detail?.fromDate)
+
+            }
+            console.error("error")
+        }
+        finally {
+            // Stop the timer
+            console.timeEnd('PostDataRequest');
+            setTimeout(() => {
+                setCommand("stop");
+            }, 100);
+        }
+        setRunButton(true)
+    };
+
+
+    const setFromDate = () => {
+
+        console.log("errorDateRangeFrom", errorDateRangeFrom)
+        dispachStateEquation({ type: "setFromDate_CollectionOfAllComponents", value: errorDateRangeFrom })
+        setErrorDateRange(null);
+        setErrorDateRangeFrom("");
+
+        return { ...temp }
+    }
 
 
     const handleSaveAs = async (data) => {
 
-        setCurrentComponentState({ ...data })
+        // setCurrentComponentState({ ...data })
+
+
+        data["equation"]["dateRange"]["from"] = format(subMonths(new Date(), 1), "yyyy-MM-dd")
+        data["equation"]["dateRange"]["to"] = format(new Date(), "yyyy-MM-dd")
         data["equation"] = JSON.stringify(data["equation"])
+
 
         try {
             console.log("handleSaveAs", session?.user?.email)
@@ -310,13 +795,18 @@ const CollectionOfAllComponents = memo(({ valueProp = {}, session = null, data }
 
                 {
                     ...data,
-                    user_email: session?.user?.email || null
+                    // user_email: session?.user?.email || null
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${await getTokenForClientSessionData()}`,
+                    }
                 }
             );
 
             // console.log('Response:', response.data);
             if (response.data) {
-                router.push(`/create-2/${response.data}`)
+                router.push(`/strategy-builder/${response.data}`)
             }
 
         } catch (error) {
@@ -364,15 +854,21 @@ const CollectionOfAllComponents = memo(({ valueProp = {}, session = null, data }
 
     const handleSave = async (data) => {
         // console.log("_id in data", data)
+        data = JSON.parse(JSON.stringify(data))
         if ("_id" in data) {
 
             try {
-                setCurrentComponentState({ ...data })
+                // setCurrentComponentState({ ...data })
                 data["equation"] = JSON.stringify(data["equation"])
                 const response = await axios.put(`${backendUrl}equations/${data["_id"]}`, {
                     ...data,
-                    user_email: session?.user?.email || null
-                });
+                    // user_email: session?.user?.email || null
+                },
+                    {
+                        headers: {
+                            Authorization: `Bearer ${await getTokenForClientSessionData()}`,
+                        }
+                    });
                 // console.log('Response:', response.status);
 
                 if (response?.status === 200) {
@@ -437,137 +933,234 @@ const CollectionOfAllComponents = memo(({ valueProp = {}, session = null, data }
 
 
 
-    const handleChangeList = useCallback((data) => {
+
+
+    const handleChangeList = (data) => {
+
         setStockListDisplay(data.list || []);
-        // setStockListName(data.name)
-        setCurrentComponentState({ ...currentComponentState, stockListName: data.name })
-        // console.log("data ******************", data)
-    }, [setStockListDisplay]);
+
+        dispachStateEquation({ type: "handleStockListChange", value: data.name })
+
+    }
+
 
     const [isVisible, setIsVisible] = useState(false);
 
 
+    const tradeMode = [
+        { value: "entry_exit_backtest", label: "Entry Exit Backtest" },
+        { value: "condition_scanner", label: "Condition Scanner" },
+    ]
+
+
+    const handleTradeModeChange = (value) => {
+
+
+        dispachStateEquation({ type: "handleTradeModeChange_CollectionOfAllComponents", value: value })
+        setPnlResult([])
+        setStocksMaxLength(null)
+
+    }
+
+    const handleRunButton = () => {
+        if (stateEquation?.tradeMode === "condition_scanner") {
+            return (
+                <Button onClick={postDataConditionScanner}>Run</Button>
+            )
+        }
+        else if (stateEquation?.tradeMode === "entry_exit_backtest") {
+            return (
+                <Button onClick={postData}>Run</Button>
+            )
+        }
+
+    }
+
+
     return (
-        <div className='space-y-2 container mx-auto min-w-[600px]'>
+        <div className="container mx-auto space-y-6 px-4 py-4 min-w-[600px]">
 
-            {(currentComponentState.title !== "") && <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-md shadow">
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-                    {currentComponentState.title}
-                </h2>
-            </div>}
-            <div className='flex items-center space-x-2'>
+            {stateEquation.title && (
+                <div className="p-4 bg-muted rounded-lg shadow-sm">
+                    <h1 className="text-3xl font-semibold text-foreground">{stateEquation.title}</h1>
+                </div>
+            )}
 
-                <Button
-                    onClick={() => setIsVisible(!isVisible)}
-                    className=""
-                >
+            {/* Header Controls */}
+            <div className="flex flex-wrap gap-4 items-center">
+                <Button onClick={() => setIsVisible(!isVisible)}>
                     {isVisible ? "Hide Stock List" : "Show Stock List"}
                 </Button>
-                {pathname != "/create-2" ? <ButtonEnableAfterInterval noOfIntervals={10} onClick={() => handleSave(currentComponentState)}>Quick Save</ButtonEnableAfterInterval> : null}
-                <StockListSelection1 valueList={stockListName} onChangeList={handleChangeList} session={session} />
-                {/* <StockListSelection1 valueList={"default"} onChangeList={handleChangeList} /> */}
+                {pathname !== "/strategy-builder" && (
+                    <ButtonEnableAfterInterval noOfIntervals={10} onClick={() => handleSave(stateEquation)}>
+                        Quick Save
+                    </ButtonEnableAfterInterval>
+                )}
+                <StockListSelection
+                    valueList={stockListName}
+                    onChangeList={handleChangeList}
+                    session={session}
+                />
 
+                <div className=' inline-flex items-center space-x-2'>
+                    <Label >Trade Mode:-</Label>
+
+
+
+                    <div>
+
+                        <Select value={stateEquation?.tradeMode} onValueChange={handleTradeModeChange}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select Trade Mode" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {tradeMode.map((mode) => (
+                                    <SelectItem key={mode.value} value={mode.value}>
+                                        {mode.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
             </div>
+
             {isVisible && (
-                <div className="flex flex-wrap gap-4">
+                <div className="flex flex-wrap gap-2">
                     {stockListDisplay.map((stock, id) => (
-                        <div
-                            key={id}
-                            className="p-2 bg-gray-100 dark:bg-gray-800 rounded shadow"
-                        >
+                        <div key={id} className="px-2 py-1 bg-secondary rounded text-sm">
                             {stock}
                         </div>
                     ))}
                 </div>
             )}
-            <Card className={" p-3 flex flex-col"}>
-                <label>Entry</label>
-                <EntryUI valueProp={currentComponentState["equation"]["entry"]} onChangeProp={onChange} objectProp="entry" />
-                <label>EntryPrice</label>
-                <EntryPrice valueProp={currentComponentState["equation"]["entryPrice"]} onChangeProp={onChange} objectProp="entryPrice"></EntryPrice>
-                <label>Quantity</label>
-                <Quantity valueProp={currentComponentState["equation"]["quantity"]} onChangeProp={onChange} objectProp="quantity"></Quantity>
+
+            {/* Entry Section */}
+            <Card className={`${(stateEquation?.tradeMode === "entry_exit_backtest") ? "p-4" : ""}  space-y-4`}>
+                <div className="space-y-2">
+                    {(stateEquation?.tradeMode === "entry_exit_backtest") && <h2 className="text-xl font-medium">Entry</h2>}
+                    <EntryUI valueProp={stateEquation["equation"]["entry"]} dispachStateEquation={dispachStateEquation} objectPath={["equation", "entry"]} onChangeProp={() => { }} objectProp="entry" />
+                </div>
+                {(stateEquation?.tradeMode === "entry_exit_backtest") && <EntryPrice valueProp={stateEquation["equation"]["entryPrice"]} objectPath={["equation", "entryPrice"]} dispachStateEquation={dispachStateEquation} objectProp="entryPrice" />}
+                {(stateEquation?.tradeMode === "entry_exit_backtest") && <Quantity valueProp={stateEquation["equation"]["quantity"]} objectPath={["equation", "quantity"]} dispachStateEquation={dispachStateEquation} objectProp="quantity" />}
             </Card>
 
-            <Card className={"p-3 flex flex-col"}>
-                <label>Exit</label>
-                <ExitUI valueProp={currentComponentState["equation"]["exitCollection"]} onChangeProp={onChange} objectProp="exitCollection"></ExitUI>
-            </Card >
+            {/* Exit Section */}
+            {(stateEquation?.tradeMode === "entry_exit_backtest") && <Card className="p-4 space-y-2">
 
+                <ExitUI valueProp={stateEquation["equation"]["exitCollection"]} objectPath={["equation", "exitCollection"]} dispachStateEquation={dispachStateEquation} objectProp="exitCollection" />
+            </Card>}
 
-            <div className={"flex flex-row ml-3 items-center  space-x-3  "}>
-
-                {runButton ? <Button onClick={() => postData()} className={``}>Run</Button>
-                    : <Button disabled>
+            {/* Action Bar */}
+            <div className="flex flex-wrap items-center gap-3">
+                {runButton ? handleRunButton() : (
+                    <Button disabled>
                         <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
                         Please wait
                     </Button>
-                }
+                )}
+                {pathname !== "/strategy-builder" && (
+                    <Button variant="secondary" onClick={() => setIsDialogOpenSave(true)}>Save</Button>
+                )}
+                <Button variant="secondary" onClick={() => setIsDialogOpenSaveAs(true)}>Save As</Button>
 
-                {pathname != "/create-2" ? <Button onClick={() => { setIsDialogOpenSave(true) }} className={``} variant="secondary">Save</Button> : null}
-                <Button onClick={() => { setIsDialogOpenSaveAs(true) }} className={``} variant="secondary">Save As</Button>
-                <div>
+                <DateRangePickerTradingView
+                    dateRange={stateEquation["equation"]["dateRange"]}
+                    getDateRange={(date) => {
 
-                    {/* <DatePickerWithRange
-                        dateRange={currentComponentState["equation"]["dateRange"]}
-                        getDateRange={(date) => {
-                            let temp = { ...currentComponentState }
-                            temp["equation"]["dateRange"] = date
-
-                            setCurrentComponentState({ ...temp })
-
-                        }}></DatePickerWithRange> */}
-
-                    <DateRangePickerTradingView
-                        dateRange={currentComponentState["equation"]["dateRange"]}
-                        getDateRange={(date) => {
-                            let temp = { ...currentComponentState }
-                            temp["equation"]["dateRange"] = date
-
-                            setCurrentComponentState({ ...temp })
-
-                        }}
-                    ></DateRangePickerTradingView>
-
-
-
-                </div>
-                <TimeCounter
-                    command={command}
-                    timer={(data) => { }}
+                        // console.log("getDateRange_CollectionOfAllComponents")
+                        dispachStateEquation({ type: "getDateRange_CollectionOfAllComponents", "value": date })
+                    }
+                    }
                 />
 
-                <LikeDislikeButton
-                    contentId={currentComponentState["_id"]}
-                    initialLikes={currentComponentState["likes"]}
-                    initialDislikes={currentComponentState["dislikes"]}></LikeDislikeButton>
+                <TimeCounter command={command} timer={() => { }} />
+
+                {pathname !== "/strategy-builder" && (
+                    <LikeDislikeButton
+                        contentId={stateEquation["_id"]}
+                        initialLikes={stateEquation["likes"]}
+                        initialDislikes={stateEquation["dislikes"]}
+                    />
+                )}
             </div>
-            {errorDateRange && <div ref={dateRangeErrorRef} className='p-1 text-red-500' >{errorDateRange}</div>}
-            {/*  && */}
-            {(errorDateRange === null) && pnlResult.length > 0 ? (
-                < div ref={pnlRef} className="max-h-[500px] overflow-auto border rounded-lg">
-                    <TradeTable data={pnlResult} />
-                </div>
-            ) : (
-                <div></div>
+
+            {/* Error and PNL Results */}
+            {errorDateRange && (
+                <>
+                    <div ref={dateRangeErrorRef} className="text-destructive text-sm">
+                        {errorDateRange} <Button onClick={() => { setFromDate() }}>{errorDateRangeFrom}</Button>
+                    </div>
+
+                </>
             )}
-            {(errorDateRange === null) && pnlResult.length > 0 ? <PNLLineChart data={pnlResultFn(pnlResult)} /> : <div></div>}
+
+            {/* {(errorDateRange === null && pnlResult.length > 0) && (
+                <>
+                    <div ref={pnlRef} className="max-h-[500px] overflow-auto border rounded-lg">
+                        <TradeTable data={pnlResult} />
+                    </div>
+
+                    <TradeAnalyticsMetrics data={pnlResult} />
+                    <PNLLineChart data={pnlResultFn(pnlResult)} />
+                </>
+            )} */}
+
+            {(errorDateRange === null && pnlResult.length > 0 && stateEquation?.tradeMode === "entry_exit_backtest") && (
+                <>
+                    {/* Trade Table Section */}
+                    <div className="bg-white dark:bg-zinc-900 border rounded-lg p-4 shadow mb-2">
+                        <div className="flex items-center justify-between p-2">
+                            <h2 className="text-lg font-semibold mb-2 text-blue-600 dark:text-blue-400">
+                                Trade Table
+                            </h2>
+                            <ExportButtons data={pnlResult} fileName="users" />
+                        </div>
+                        <div ref={pnlRef} className=" overflow-auto border rounded-lg">
+                            {/* <div ref={pnlRef} className=""> */}
+                            <TradeTable data={pnlResult} />
+                        </div>
+                    </div>
+
+                    {/* Analytics Section */}
+                    <div className="bg-blue-50 dark:bg-zinc-800 border rounded-lg p-4 shadow mb-6">
+                        <h2 className="text-lg font-semibold mb-2 text-indigo-600 dark:text-indigo-400">Analytics Summary</h2>
+                        <TradeAnalyticsMetrics data={pnlResult} />
+                    </div>
+
+                    {/* PNL Chart Section */}
+                    <div className="bg-green-50 dark:bg-zinc-800 border rounded-lg p-4 shadow">
+                        <h2 className="text-lg font-semibold mb-2 text-green-600 dark:text-green-400">PNL Trend</h2>
+                        <PNLLineChart data={pnlResultFn(pnlResult)} />
 
 
+                    </div>
+                </>
+            )}
 
-            {isDialogOpenSaveAs && <DialogForSaveAs
-                open={isDialogOpenSaveAs}
-                setOpen={setIsDialogOpenSaveAs}
-                valueProp={currentComponentState}
-                onSubmitProp={handleSaveAs}></DialogForSaveAs>}
+            {(errorDateRange === null && stocksMaxLength !== null && pnlResult.length > 0 && stateEquation?.tradeMode === "condition_scanner") &&
+                // <StockBarGraph data={pnlResult} />
+                <VirtualBarChart data={pnlResult} maxStocks={stocksMaxLength} />}
 
-            {isDialogOpenSave && <DialogForSave
-                open={isDialogOpenSave}
-                setOpen={setIsDialogOpenSave}
-                valueProp={currentComponentState}
-                onSubmitProp={handleSave}></DialogForSave>}
-        </div >
-    )
-})
+            {/* Dialogs */}
+            {isDialogOpenSaveAs && (
+                <DialogForSaveAs
+                    open={isDialogOpenSaveAs}
+                    setOpen={setIsDialogOpenSaveAs}
+                    valueProp={stateEquation}
+                    onSubmitProp={handleSaveAs}
+                />
+            )}
+            {isDialogOpenSave && (
+                <DialogForSave
+                    open={isDialogOpenSave}
+                    setOpen={setIsDialogOpenSave}
+                    valueProp={stateEquation}
+                    onSubmitProp={handleSave}
+                />
+            )}
+        </div>
+    );
+};
 
-export default CollectionOfAllComponents
+export default CollectionOfAllComponents;

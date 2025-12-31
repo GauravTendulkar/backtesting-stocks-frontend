@@ -14,6 +14,22 @@ const PrevTradeCount = ({ arrayPass, passto = () => { } }) => {
             </>
         )
     }
+    else if (arrayPass[0]["value"] == "countPrevTradesWeekly") {
+        return (
+            <>
+                {/* <Label>{arrayPass[0]["label"]}</Label> */}
+                <Button variant="outline">{arrayPass[0]["label"]}</Button>
+            </>
+        )
+    }
+    else if (arrayPass[0]["value"] == "countPrevTradesMonthly") {
+        return (
+            <>
+                {/* <Label>{arrayPass[0]["label"]}</Label> */}
+                <Button variant="outline">{arrayPass[0]["label"]}</Button>
+            </>
+        )
+    }
 
 }
 

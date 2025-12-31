@@ -61,7 +61,7 @@ const StrategySearch = () => {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {paginatedResults.map((s, i) => {
               const slug = slugify(s.link || s.title || "", { lower: true });
-              const strategyUrl = `/create-2/${slug}`;
+              const strategyUrl = `/strategy-builder/${slug}`;
               const fullUrl = `${window.location.origin}${strategyUrl}`;
 
               return (

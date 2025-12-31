@@ -12,7 +12,7 @@ const LikeDislikeButton = ({ contentId, initialLikes, initialDislikes }) => {
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
-        console.log("status", status)
+        // console.log("status", status)
         if (status === 'authenticated') {
             fetchUserVote();
         }

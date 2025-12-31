@@ -30,7 +30,7 @@ export function DateRangePickerTradingView({ className, dateRange, getDateRange 
 
         if (tempDate.from && tempDate.to) {
             if (tempDate.from > tempDate.to) {
-                setInputError("Start date cannot be after end date")
+                setInputError("Start date cannot be greater than end date")
                 return
             }
             setInputError(null)
@@ -42,7 +42,7 @@ export function DateRangePickerTradingView({ className, dateRange, getDateRange 
     }, [tempDate]) // Only trigger when tempDate changes
 
     const setPredefinedRange = (range) => {
-        const today = new Date(tempDate.to || new Date()) // Use current date if tempDate.to is null
+        let today = new Date(tempDate.to || new Date()) // Use current date if tempDate.to is null
         let fromDate
 
         switch (range) {
@@ -73,6 +73,37 @@ export function DateRangePickerTradingView({ className, dateRange, getDateRange 
             to: today
         })
     }
+
+    const setToDateRange = (range) => {
+        let today = new Date(tempDate.to || new Date()) // Use current date if tempDate.to is null
+        switch (range) {
+
+            case 'today':
+                today = new Date()
+                break
+            case '-1y':
+                today = subYears(today, -1)
+                break
+            case '1y':
+                today = subYears(today, 1)
+                break
+            case '-1m':
+                today = subMonths(today, -1)
+                break
+            case '1m':
+                today = subMonths(today, 1)
+                break
+
+            default:
+                today = new Date(tempDate.to || new Date())
+        }
+
+        setTempDate({
+            ...tempDate,
+            to: today
+        })
+    }
+
 
     return (
         <Popover open={isPopoverOpen} onOpenChange={(open) => {
@@ -113,6 +144,7 @@ export function DateRangePickerTradingView({ className, dateRange, getDateRange 
                         <Button variant="outline" onClick={() => setPredefinedRange('5y')}>5Y</Button>
                     </div>
 
+
                     <div className="flex-col gap-4 mb-4">
                         <div className="flex flex-col">
                             <label className="text-sm mb-1">From</label>
@@ -126,6 +158,14 @@ export function DateRangePickerTradingView({ className, dateRange, getDateRange 
                                 }))}
                             />
                         </div>
+                        <div className="grid grid-cols-3 gap-2 my-4">
+                            <Button variant="outline" onClick={() => setToDateRange('today')}>Today</Button>
+                            <Button variant="outline" onClick={() => setToDateRange('1y')}>{"< Y"}</Button>
+                            <Button variant="outline" onClick={() => setToDateRange('-1y')}>{"Y >"}</Button>
+                            <Button variant="outline" onClick={() => setToDateRange('1m')}>{"< M"}</Button>
+                            <Button variant="outline" onClick={() => setToDateRange('-1m')}>{"M >"}</Button>
+                        </div>
+
 
                         <div className="flex flex-col">
                             <label className="text-sm mb-1">To</label>

@@ -3,28 +3,29 @@ import React, { useState } from 'react'
 import NewDataFileUpload from '../uploadFiles/NewDataFileUpload'
 import GetFilesInfo from '../uploadFiles/GetFilesInfo'
 import RunAutomationForNewData from '../uploadFiles/RunAutomationForNewData'
-import RolesAndPermissionChange from './RolesAndPermissionChange'
-import GlobalPermissionManager from './GlobalPermissionManager'
+import RolesAndPermissionChange from './RolesManager'
+import GlobalPermissionManager from './PermissionManager'
 import UserRoleManager from './UserRoleManager'
+import GroupPermissionManager from './GroupManager'
+import RolesManager from './RolesManager'
+import GroupManager from './GroupManager'
+import PermissionManager from './PermissionManager'
+import DateRangeManager from './DateRangeManager'
 
 
-const DashBoardUI = () => {
+const DashBoardUI = ({ roles = [] }) => {
 
-    const [section, setSection] = useState("userRoleManager");         //  upload, roles, permissions
+    const [section, setSection] = useState("dateRangeManager");         //  upload, roles, permissions, userRoleManager, dateRange
 
 
     const changeSection = () => {
 
-        if (section === "upload") {
+        if (section === "upload" && roles.includes("admin-dashboard.upload")) {
 
             return (
                 <>
 
-                    {/* <div className='space-y-2 container mx-auto min-w-[600px] border-black border-2'>
-                        <div>DashBoardUI</div>
 
-
-                    </div> */}
                     <NewDataFileUpload></NewDataFileUpload>
                     <GetFilesInfo></GetFilesInfo>
                     <RunAutomationForNewData></RunAutomationForNewData>
@@ -32,24 +33,38 @@ const DashBoardUI = () => {
                 </>
             )
         }
-        else if (section === "roles") {
+        else if (section === "roles" && roles.includes("admin-dashboard.roles")) {
             return (
                 <>
-                    <RolesAndPermissionChange></RolesAndPermissionChange>
+                    <RolesManager></RolesManager>
                 </>
             )
         }
-        else if (section === "permissions") {
+        else if (section === "groups") {
             return (
                 <>
-                    <GlobalPermissionManager></GlobalPermissionManager>
+                    <GroupManager></GroupManager>
                 </>
             )
         }
-        else if (section === "userRoleManager") {
+        else if (section === "permissions" && roles.includes("admin-dashboard.permissions")) {
+            return (
+                <>
+                    <PermissionManager></PermissionManager>
+                </>
+            )
+        }
+        else if (section === "userRoleManager" && roles.includes("admin-dashboard.user-role-manager")) {
             return (
                 <>
                     <UserRoleManager></UserRoleManager>
+                </>
+            )
+        }
+        else if (section === "dateRangeManager" && roles.includes("admin-dashboard.user-role-manager")) {
+            return (
+                <>
+                    <DateRangeManager></DateRangeManager>
                 </>
             )
         }
@@ -75,7 +90,15 @@ const DashBoardUI = () => {
                 >
                     Roles
                 </button>
-
+                <button
+                    onClick={() => setSection("groups")}
+                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-200
+                   ${section === "groups"
+                            ? "bg-blue-600 text-white"
+                            : "bg-gray-200 hover:bg-blue-500 hover:text-white"}`}
+                >
+                    Groups
+                </button>
                 <button
                     onClick={() => setSection("permissions")}
                     className={`px-4 py-2 rounded-lg font-medium transition-all duration-200
@@ -93,6 +116,15 @@ const DashBoardUI = () => {
                             : "bg-gray-200 hover:bg-blue-500 hover:text-white"}`}
                 >
                     User Role Manager
+                </button>
+                <button
+                    onClick={() => setSection("dateRangeManager")}
+                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-200
+                   ${section === "dateRangeManager"
+                            ? "bg-blue-600 text-white"
+                            : "bg-gray-200 hover:bg-blue-500 hover:text-white"}`}
+                >
+                    Date Range Manager
                 </button>
             </nav>
 

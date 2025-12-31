@@ -8,7 +8,6 @@ import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 
-
 const SearchDropdown = forwardRef(({ className = "", size = "", children, valueArray, onChange = () => { } }, ref) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isOpen, setIsOpen] = useState(false);
@@ -21,12 +20,10 @@ const SearchDropdown = forwardRef(({ className = "", size = "", children, valueA
 
     const [options, setOptions] = useState(valueArray);
 
-    // Update options when props change
     useEffect(() => {
         setOptions(valueArray);
     }, [valueArray]);
 
-    // Handle clicks outside and viewport updates
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -43,8 +40,6 @@ const SearchDropdown = forwardRef(({ className = "", size = "", children, valueA
                 const spaceBelow = viewportHeight - triggerRect.bottom;
                 const spaceAbove = triggerRect.top;
 
-                // Determine if dropdown should be displayed above or below
-                // console.log("setIsOutOfViewport", spaceBelow < dropdownRect.height && spaceAbove > dropdownRect.height)
                 setIsOutOfViewport(
                     spaceBelow < dropdownRect.height && spaceAbove > dropdownRect.height
                 );
@@ -55,7 +50,6 @@ const SearchDropdown = forwardRef(({ className = "", size = "", children, valueA
         window.addEventListener('resize', updateDocHeight);
         window.addEventListener('scroll', updateDocHeight);
 
-        // Initial check
         updateDocHeight();
 
         return () => {
@@ -65,7 +59,6 @@ const SearchDropdown = forwardRef(({ className = "", size = "", children, valueA
         };
     }, [isOpen]);
 
-    // Improved options filter
     const filteredOptions = Array.isArray(options)
         ? options.filter(option =>
             option?.search?.some(item =>
@@ -79,7 +72,6 @@ const SearchDropdown = forwardRef(({ className = "", size = "", children, valueA
         setSearchTerm('');
     };
 
-    // Focus search input when dropdown opens
     useEffect(() => {
         if (isOpen && searchInputRef.current) {
             searchInputRef.current.focus();
@@ -93,26 +85,31 @@ const SearchDropdown = forwardRef(({ className = "", size = "", children, valueA
     };
 
     return (
-        <div className="relative overflow-visible" ref={dropdownRef}>
-
-            <Button ref={triggerRef} onClick={toggleDropdown} className={`${className} `} size={size} >
+        <div className="relative" ref={dropdownRef}>
+            <Button
+                ref={triggerRef}
+                onClick={toggleDropdown}
+                className={`${className} rounded-md px-3 py-2`}
+                size={size}
+            >
                 {children}
             </Button>
 
-
-            {/* Dropdown menu */}
             {isOpen && (
-                <div ref={popoverRef} className={`absolute z-50 mt-1 border bg-card text-card-foreground shadow min-w-max ${isOutOfViewport ? 'bottom-full' : ''}`}>
-                    {/* Search bar inside dropdown */}
-                    <div className="px-3 py-2 flex items-center">
-                        <FontAwesomeIcon icon={faSearch} className="text-gray-500 mr-2" />
+                <div
+                    ref={popoverRef}
+                    className={`absolute z-50 w-64 mt-2 rounded-md border bg-card text-card-foreground shadow-lg ${isOutOfViewport ? 'bottom-full mb-2' : ''}`}
+                >
+                    {/* Search bar */}
+                    <div className="flex items-center px-3 py-2 border-b">
+                        <FontAwesomeIcon icon={faSearch} className="text-muted-foreground mr-2" />
                         <Input
                             type="text"
                             ref={searchInputRef}
                             placeholder="Search..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className=""
+                            className="h-8 px-2 py-1 text-sm"
                         />
                     </div>
 
@@ -122,19 +119,19 @@ const SearchDropdown = forwardRef(({ className = "", size = "", children, valueA
                             <li
                                 key={index}
                                 onClick={() => handleOptionClick(option.value)}
-                                className="cursor-pointer px-3 py-2 hover:bg-accent hover:text-accent-foreground"
+                                className="cursor-pointer px-4 py-2 text-sm hover:bg-muted hover:text-foreground transition-colors"
                             >
                                 {option.label}
                             </li>
                         ))}
+                        {filteredOptions.length === 0 && (
+                            <li className="px-4 py-2 text-muted-foreground text-sm italic">No results found</li>
+                        )}
                     </ul>
                 </div>
             )}
         </div>
-
-
     );
-}
-);
+});
 
 export default SearchDropdown;

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import { useTheme } from "next-themes";
 import { StockListContext } from "@/app/context/StockListContext";
 import useStockList from "@/hooks/useStockList";
@@ -15,62 +15,18 @@ const StockList = ({ session, data }) => {
     useEffect(() => {
         setStockData(data)
     }, [data])
+    // setStockData(data);
 
     useEffect(() => {
         setSessionStockList(session)
     }, [session])
 
-    // useEffect(() => {
 
-    //     // setSessionStockList(session)
-    //     async function getStockDataTemp() {
-    //         try {
-
+    // useMemo(() => {
+    //     setStockData(data);
+    // }, [data]);
 
 
-    //             const response = await axios.post(`${backendUrl}api/stock-list/get/`, {
-    //                 user_email: session?.user?.email
-    //             });
-    //             // console.log("getStockData token", response.data)
-    //             setStockData(response.data)
-
-    //         }
-    //         catch (error) {
-
-    //             console.log("Error ", error)
-
-    //         }
-    //     }
-    //     getStockDataTemp()
-    // }, [session])
-    // const { saveStockData } = useContext(StockListContext);
-
-    // const { stockData, setStockData, getStockData } = useStockList(session);
-
-    // const [stockData, setStockData] = useState(() => getStockData());
-    // const stockData = {
-    //     fullStockList: [
-    //         "AARTIIND", "ABB", "ABCAPITAL", "ABFRL", "ACC", "ADANIENT",
-    //         "ADANIPORTS", "ALKEM", "AMBUJACEM", "APOLLOHOSP", "APOLLOTYRE",
-    //         "ASHOKLEY", "ASIANPAINT", "ASTRAL", "ATUL", "AUBANK", "AUROPHARMA",
-    //         "AXISBANK", "BAJAJ_AUTO", "BAJAJFINSV", "BAJFINANCE", "BALKRISIND",
-    //         "BALRAMCHIN", "BANDHANBNK", "BANKBARODA",
-    //     ],
-    //     "defaultStockList": [{
-    //         "name": "default",
-    //         "list": ["AARTIIND",
-    //             "ABB",
-    //             "ABCAPITAL",
-    //             "ABFRL",
-    //             "ACC",]
-    //     }
-    //     ],
-    //     customStockList: [
-    //         { name: "list 1", list: ["AARTIIND", "ABB", "ABCAPITAL", "ABFRL", "ACC", "ADANIENT", "ADANIPORTS"] },
-    //         { name: "list 2", list: ["ATUL", "AUBANK"] },
-    //         { name: "list 3", list: ["BALKRISIND", "BALRAMCHIN", "BANDHANBNK", "BANKBARODA"] },
-    //     ]
-    // };
 
     const [customLists, setCustomLists] = useState(stockData?.customStockList || []);
     const [newListName, setNewListName] = useState("");
@@ -141,6 +97,49 @@ const StockList = ({ session, data }) => {
         }
     };
 
+
+    const addStockListOnHover = async (index) => {
+        console.log("addStockListOnHover", index)
+        let clipText = ""
+        try {
+            clipText = await navigator.clipboard.readText();
+            const result = clipText.toUpperCase().split("\n").map(line => line.replace(/\r/g, ''));
+            const uniqueArray = result.filter((item, index) => result.indexOf(item) === index);
+            const ifArrayExist = uniqueArray.filter((item, index) => stockData.fullStockList.includes(item));
+
+            // setCustomLists([...customLists,  { name: newListName, list: ifArrayExist } ])
+            setCustomLists(customLists.map((e, i) => {
+                if (index === i) {
+                    return { ...e, list: ifArrayExist }
+                }
+                else {
+                    return e
+                }
+            })
+            );
+
+            console.log(customLists.map((e, i) => {
+                if (index === i) {
+                    return { ...e, list: ifArrayExist }
+                }
+                else {
+                    return e
+                }
+            }))
+            // console.log('Output:', ifArrayExist);
+            // clipText.map(item => item.slice(0, -2))
+            // console.log('Clipboard content:', clipText);
+
+            // You can then use clipText to update an element on your page, for example:
+            // document.getElementById("output").innerText = clipText;
+        } catch (err) {
+            console.error('Failed to read clipboard contents:', err);
+        }
+        // console.log('Clipboard content:', await clipText.map(item => item.slice(0, -2)));
+        // console.log(clipText.slice(0, 1))
+        // console.log(customLists)
+    }
+
     return (
         <div className={`p-4 transition-colors duration-300 ${currentTheme === "dark" ? "bg-gray-900 text-white" : "bg-gray-100 text-black"}`}>
             {/* Theme Toggle Button */}
@@ -193,6 +192,9 @@ const StockList = ({ session, data }) => {
                                 <button onClick={() => deleteCustomList(customList.name)} className="bg-red-500 text-white px-3 py-1 rounded">
                                     Delete
                                 </button>
+                                <button
+                                    onClick={() => addStockListOnHover(index)}
+                                    className="bg-red-500 text-white px-3 py-1 rounded">Paste</button>
                                 <div className="px-4 py-2 rounded border transition-colors duration-300"
                                 >{customList && customList.list.length}/{stockData && stockData?.stockExecutionListLimit}</div>
                             </div>

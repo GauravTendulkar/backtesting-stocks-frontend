@@ -14,7 +14,7 @@ const useDragAndDrop = (initialValue = [], onChange = () => { }) => {
     const [isDragging, setIsDragging] = useState(false);
 
 
-    
+
     const handleOnDragStart = (id) => {
         // console.log("OnDragStart", id)
         setDragID(id)
@@ -38,7 +38,7 @@ const useDragAndDrop = (initialValue = [], onChange = () => { }) => {
         // console.log("mouseX", mouseX)
         if ((mouseX < targetDrageItemCenter && id < dragID) ||
             (mouseX >= targetDrageItemCenter && id > dragID)) {
-            
+
             let temp = [...data]
             const removedData = temp[dragID]
             temp.splice(dragID, 1)
@@ -46,7 +46,10 @@ const useDragAndDrop = (initialValue = [], onChange = () => { }) => {
             // console.log(temp)
             if (isDragging) {
                 setData([...temp])
-                onChange([...temp])
+                // onChange([...temp])
+                onChange(JSON.parse(JSON.stringify(temp)))
+
+
                 setIsDragging(true)
                 setDragID(id)
             }
